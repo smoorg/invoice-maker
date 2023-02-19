@@ -14,19 +14,26 @@ It can be used as database of all your partners, or just a simple way to generat
 
 Keep in mind not everything works as expected. I am working on it in my spare time just for fun.
 
-## How to build
+## How to use it
 
-All the code is in `src` so you can simply go to src folder and build it
+All the code is in `src` so you can simply go to src folder and build it.
 
-```go
-cd src/
-go build .
+
+### Build
+```sh
+make build
 ```
 
-To run simply make generated binary executable or:
 
-```go
-go run .
+### Run
+```sh
+make run
+```
+
+### Test
+
+```sh
+make test
 ```
 
 ## Getting started
@@ -115,10 +122,10 @@ It will be stored in the folder you specified in the `Config` section. It expect
 
 ## TODO
 
-[ ] Create proper way to deploy to AUR and other distros. .deb and arch build will come first.
-[ ] Error handling that stops application end returns log in the console.
-[✓] Error modal with info what went wrong.
-[ ] Show confirmation of print operation.
-[ ] Figure out how to store $HOME or `~` in the invoice directory. 
-[ ] Write documentation of all the key bindings shown as modal under `H` or `F1`
-[ ] Write man docs or move that README to man format.
+- [ ] Create proper way to deploy to AUR and other distros. .deb and arch build will come first.
+- [ ] Error handling that stops application end returns log in the console.
+- [✓] Error modal with info what went wrong.
+- [ ] Show confirmation of print operation.
+- [ ] Figure out how to store $HOME or `~` in the invoice directory. 
+- [ ] Write documentation of all the key bindings shown as modal under `H` or `F1`
+- [ ] Write man docs or move that README to man format.
