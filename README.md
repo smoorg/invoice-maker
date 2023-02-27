@@ -16,7 +16,7 @@ Keep in mind not everything works as expected. I am working on it in my spare ti
 
 ## How to use it
 
-All the code is in `src` so you can simply go to src folder and build it.
+Makefile is prepared to use it straight out of root folder. Alternatively, all the code is in `src` so you can `cd` to it and just `go build` instead. 
 
 
 ### Build
@@ -124,7 +124,7 @@ It will be stored in the folder you specified in the `Config` section. It expect
 
 - [ ] Create proper way to deploy to AUR and other distros. .deb and arch build will come first.
 - [ ] Error handling that stops application end returns log in the console.
-- [✓] Error modal with info what went wrong.
+- [x] Error modal with info what went wrong.
 - [ ] Show confirmation of print operation.
 - [ ] Figure out how to store $HOME or `~` in the invoice directory. 
 - [ ] Write documentation of all the key bindings shown as modal under `H` or `F1`
