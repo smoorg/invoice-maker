@@ -29,7 +29,7 @@
 
 Podpis osoby upoważnionej do odebrania:                Podpis osoby upoważnionej do wystawienia:
 ┌───────────────────────────────────────┐              ┌───────────────────────────────────────┐
-│                                       │              │ Mateusz Reszka                        │ 
+│                                       │              │                                       │ 
 │                                       │              │                                       │ 
 │                                       │              │                                       │ 
 │                                       │              │                                       │ 
