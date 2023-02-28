@@ -8,11 +8,11 @@ build:
 	go build -o $(BIN) --pkgdir $(PKG) -C $(SRC) main.go
  
 run:
-	go build -o $(BIN) --pkdir $(PKG) -C $(SRC) main.go
+	go build -o $(BIN) --pkgdir $(PKG) -C $(SRC) main.go
 	./bin/${BINARY_NAME}
  
 test:
-	go test $(SRC) ./...
+	go test -C $(SRC) ./...
 
 clean:
 	go clean
