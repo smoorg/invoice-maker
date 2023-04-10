@@ -76,25 +76,24 @@ func printInvoice(tui *types.TUI) {
 	}
 
 	inv := template.ApplyInvoice(string(tmpl), string(rowTemplate), i)
+
 	_, err = template.SaveInvoice(inv, dir)
 	if err != nil {
 		tui.Fatal("missing row template", err)
 	}
-
 }
 
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if vimkeys.Back(eventKey) {
 		tui.SwitchToPage(types.PageDefault)
 	}
-
 	if vimkeys.Down(eventKey) {
 		return tcell.NewEventKey(tcell.KeyDown, tcell.RuneDArrow, tcell.ModNone)
 	}
 	if vimkeys.Up(eventKey) {
 		return tcell.NewEventKey(tcell.KeyUp, tcell.RuneUArrow, tcell.ModNone)
 	}
-	if vimkeys.Enter(eventKey) {
+	if vimkeys.Forward(eventKey) {
 		return tcell.NewEventKey(tcell.KeyEnter, rune(tcell.KeyEnter), tcell.ModNone)
 	}
 

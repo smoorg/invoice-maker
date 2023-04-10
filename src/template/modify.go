@@ -44,7 +44,7 @@ func replaceField(t string, label string, value string) string {
 }
 
 func insertRows(t string, label string, value string) string {
-	re := regexp.MustCompile(`\[\s*` + label + `\s*\]`)
+	re := regexp.MustCompile(`\[\s*` + label + `\s*\]\n`)
 
 	return re.ReplaceAllString(t, value)
 }
@@ -145,7 +145,9 @@ func SaveInvoice(invoice string, dirname string) (string, error) {
 	}
 
 	pdfName := name + ".pdf"
-	err = pdf.PrintInvoice(filepath.Join(dirname, htmlName), pdfName)
+	re := regexp.MustCompile(`<?.pre>`)
+	pdfContent := re.ReplaceAllString(invoice, "")
+	err = pdf.PrintInvoice(pdfContent, filepath.Join(dirname, pdfName))
 	if err != nil {
 		return "", errors.New("issue while writting pdf file: " + err.Error())
 	}

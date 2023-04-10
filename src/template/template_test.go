@@ -8,7 +8,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func TestApplyInvoice(t *testing.T) {
+func TestApplyAddress(t *testing.T) {
 	template := "| [ InvoiceAddress                     ] |"
 	length := len(template)
 	i := config.Invoice{}
@@ -19,6 +19,41 @@ func TestApplyInvoice(t *testing.T) {
 	if length != len(sut) {
 		t.Error("length mismatch")
 	}
+}
+
+func TestApplyInvoiceRows(t *testing.T) {
+	template := "| [ InvoiceAddress                     ] |\n [ Items ]"
+	i := config.Invoice{
+		Items: []config.InvoiceItem{
+			{
+				Title:    "Cheese",
+				Quantity: 2,
+				Unit:     "kg",
+				Price:    decimal.NewFromInt(20),
+				VatRate:  15,
+			},
+			{
+				Title:    "Cheese",
+				Quantity: 2,
+				Unit:     "kg",
+				Price:    decimal.NewFromInt(20),
+				VatRate:  15,
+			},
+		},
+	}
+	i.Issuer.Address = "ul. Narutowicza 14B/2, 80-501 Gdańsk"
+
+	rowTemplate := "│ [ Title                ] │ [Qty] │ [Unit]  │ [Price] │ [Amount] │ [VR]  │ [VA   ] │ [Total]  │"
+
+	sut := ApplyInvoice(template, rowTemplate, i)
+
+	t.Error(sut)
+
+	lines := strings.Split(sut, "\n")
+	if len(lines) > 2 {
+		t.Error("too many lines")
+	}
+
 }
 
 func TestTotalCalculations(t *testing.T) {

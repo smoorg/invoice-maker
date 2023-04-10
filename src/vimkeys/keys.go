@@ -16,6 +16,6 @@ func Down(eventKey *tcell.EventKey) bool {
 	return eventKey.Key() == tcell.KeyDown || eventKey.Rune() == 'j'
 }
 
-func Enter(eventKey *tcell.EventKey) bool {
+func Forward(eventKey *tcell.EventKey) bool {
 	return eventKey.Rune() == 'l' || eventKey.Key() == tcell.KeyEnter
 }

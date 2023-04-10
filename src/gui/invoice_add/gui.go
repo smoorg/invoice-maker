@@ -129,9 +129,5 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 		goBack(tui)
 	}
 
-	//if eventKey.Key() == tcell.KeyTab || eventKey.Key() == tcell.KeyEnter {
-	//	return eventKey
-	//}
-
 	return eventKey
 }

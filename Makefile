@@ -8,7 +8,7 @@ build:
 	go build -o $(BIN) --pkgdir $(PKG) -C $(SRC) main.go
  
 run:
-	go build -o $(BIN) --pkgdir $(PKG) -C $(SRC) main.go
+	$(build)
 	./bin/${BINARY_NAME}
  
 test:

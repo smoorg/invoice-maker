@@ -1,32 +1,33 @@
 package pdf
 
 import (
-	"context"
+	"github.com/phpdave11/gofpdf"
 	"os"
-	"path/filepath"
-
-	"github.com/chromedp/cdproto/page"
-	"github.com/chromedp/chromedp"
 )
 
-func PrintInvoice(htmlFileName string, pdfFileName string) error {
-	ctx, cancel := chromedp.NewContext(context.Background())
-	defer cancel()
+func PrintInvoice(txt string, pdfFileName string) error {
+	f := gofpdf.New("P", "mm", "A4", "/usr/share/fonts/TTF/")
+	f.SetFont("Arial", "B", 12)
 
-	return chromedp.Run(ctx,
-		chromedp.Navigate("file://"+htmlFileName),
-		chromedp.WaitVisible(`body`, chromedp.ByQuery),
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			buf, _, err := page.PrintToPDF().WithPrintBackground(false).Do(ctx)
-			if err != nil {
-				return err
-			}
-			err = os.WriteFile(filepath.Join(filepath.Dir(htmlFileName), pdfFileName), buf, 0744)
-			if err != nil {
-				return err
-			}
+	if fontBytes, err := getCustomFont(); err == nil {
+		f.AddUTF8FontFromBytes("JetBrainsMono", "", fontBytes)
+		f.SetFont("JetBrainsMono", "", 8)
+	}
 
-			return nil
-		}),
-	)
+	f.AddPage()
+	f.MultiCell(0, 4, txt, "", "", false)
+
+	err := f.OutputFileAndClose(pdfFileName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func getCustomFont() ([]byte, error) {
+	fontPath := "/usr/share/fonts/TTF/JetBrainsMono-Regular.ttf"
+	fontBytes, err := os.ReadFile(fontPath)
+
+	return fontBytes, err
 }

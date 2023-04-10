@@ -123,9 +123,12 @@ It will be stored in the folder you specified in the `Config` section. It expect
 ## TODO
 
 - [ ] Create proper way to deploy to AUR and other distros. .deb and arch build will come first.
-- [ ] Error handling that stops application end returns log in the console.
+- [ ] Error handling that stops application and returns log in the console.
 - [x] Error modal with info what went wrong.
 - [ ] Show confirmation of print operation.
 - [ ] Figure out how to store $HOME or `~` in the invoice directory. 
-- [ ] Write documentation of all the key bindings shown as modal under `H` or `F1`
-- [ ] Write man docs or move that README to man format.
+- [ ] Add a way to provide your own font and its render params. For now hardcoded to JetbrainsMono-Regular.ttf
+- [ ] Documentation & packaging
+    - [ ] Write documentation of all the key bindings shown as modal under `H` or `F1`
+    - [ ] Write man docs or move that README to man format.
+    - [ ] Create proper way to deploy to AUR and other distros. .deb and arch build will come first.
