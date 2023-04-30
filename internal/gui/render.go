@@ -14,19 +14,10 @@ import (
 	"invoice-maker/internal/types"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 )
 
 /* Initializes application. Run it once in main only. */
 func Run(tui *types.TUI) error {
-	cfg, err := config.GetConfig()
-	if err != nil {
-		tui.Fatal(err)
-	}
-	tui.Config = cfg
-
-	tui.App = tview.NewApplication()
-	tui.Pages = tview.NewPages()
 	tui.ActivePage = types.PageDefault
 	tui.Rerender = func() { Render(tui) }
 
@@ -46,7 +37,6 @@ func Render(tui *types.TUI) {
 
 func setup(tui *types.TUI) {
 	menu.Render(tui)
-
 	receiver_list.Render(tui)
 	issuer_edit.Render(tui)
 	invoice_list.Render(tui)
