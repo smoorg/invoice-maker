@@ -93,7 +93,7 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if vimkeys.Up(eventKey) {
 		return tcell.NewEventKey(tcell.KeyUp, tcell.RuneUArrow, tcell.ModNone)
 	}
-	if vimkeys.Forward(eventKey) {
+	if vimkeys.Forward(eventKey) || eventKey.Rune() == 'e' {
 		return tcell.NewEventKey(tcell.KeyEnter, rune(tcell.KeyEnter), tcell.ModNone)
 	}
 
