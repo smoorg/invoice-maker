@@ -8,6 +8,7 @@ import (
 
 const (
 	PageDefault    string = "default"     // Menu page
+	PageHelp              = "help"        // Help modal
 	PageIssuerEdit string = "issuer_edit" // Edit issuer details. There are just one available for the time being.
 
 	PageInvoiceAdd  string = "invoice_add"

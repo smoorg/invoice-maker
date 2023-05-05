@@ -3,6 +3,7 @@ package gui
 import (
 	"invoice-maker/internal/config"
 	"invoice-maker/internal/gui/config_page"
+	"invoice-maker/internal/gui/help"
 	"invoice-maker/internal/gui/invoice_add"
 	"invoice-maker/internal/gui/invoice_edit"
 	"invoice-maker/internal/gui/invoice_list"
@@ -52,6 +53,10 @@ func eventHandler(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if eventKey.Key() == tcell.KeyCtrlC ||
 		eventKey.Key() == tcell.KeyCtrlD {
 		tui.App.Stop()
+	}
+
+	if eventKey.Key() == tcell.KeyHelp || eventKey.Key() == tcell.KeyCtrlH {
+		help.Render(tui)
 	}
 
 	switch tui.ActivePage {
