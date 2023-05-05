@@ -43,14 +43,14 @@ func replaceField(t string, label string, value string) string {
 	return result
 }
 
-func insertRows(t string, label string, value string) string {
+func InsertRows(t string, label string, value string) string {
 	re := regexp.MustCompile(`\[\s*` + label + `\s*\]\n`)
 
 	return re.ReplaceAllString(t, value)
 }
 
-func ApplyInvoice(template string, rowTemplate string, cfg config.Invoice) (result string) {
-	result = template
+func ApplyInvoice(templateStr string, rowTemplate string, cfg *config.Invoice) (result string) {
+	result = templateStr
 
 	result = replaceField(result, "IssuerName", cfg.Issuer.Name)
 	result = replaceField(result, "IssuerAddress", cfg.Issuer.Address)
@@ -62,47 +62,43 @@ func ApplyInvoice(template string, rowTemplate string, cfg config.Invoice) (resu
 	result = replaceField(result, "ReceiverName", cfg.Receiver.Name)
 	result = replaceField(result, "ReceiverAddress", cfg.Receiver.Address)
 	result = replaceField(result, "ReceiverTaxID", cfg.Receiver.TaxID)
+	result = replaceField(result, "PaymentType", cfg.PaymentType)
 
 	result = replaceField(result, "InvoiceNo", cfg.InvoiceNo)
 	result = replaceField(result, "InvoiceDate", cfg.InvoiceDate)
 	result = replaceField(result, "PaymentType", cfg.PaymentType)
 	result = replaceField(result, "DueDate", cfg.DueDate)
 
-	amountSum := decimal.Zero
-	for _, v := range cfg.Items {
-		amountSum.Add(v.Amount)
-	}
-	result = replaceField(result, "ASum", amountSum.String())
-
-	vatSum := decimal.Zero
-	for _, v := range cfg.Items {
-		vatSum.Add(v.VatAmount)
-	}
-	result = replaceField(result, "TaxSum", vatSum.String())
-
-	totSum := decimal.Zero
-	for _, v := range cfg.Items {
-		totSum.Add(v.VatAmount)
-	}
-	result = replaceField(result, "TotSum", totSum.String())
-
+	amountSum := decimal.NewFromInt32(0)
+	vatSum := decimal.NewFromInt32(0)
+	totSum := decimal.NewFromInt32(0)
 	if rowTemplate != "" && len(cfg.Items) > 0 {
-		items := ""
-		for _, item := range cfg.Items {
-			items += rowTemplate
-			item.CalculateTotal()
+		itemsStr := ""
 
-			items = replaceField(items, "Title", fmt.Sprint(item.Title))
-			items = replaceField(items, "Qty", fmt.Sprint(item.Quantity))
-			items = replaceField(items, "Unit", fmt.Sprint(item.Unit))
-			items = replaceField(items, "Price", item.Price.String())
-			items = replaceField(items, "Amount", item.Amount.String())
-			items = replaceField(items, "VR", fmt.Sprintf("%d%%", item.VatRate))
-			items = replaceField(items, "VA", fmt.Sprint(item.VatAmount.String()))
-			items = replaceField(items, "Total", fmt.Sprint(item.Total))
+		for i := range cfg.Items {
+			itemsStr += rowTemplate
+			cfg.Items[i].CalculateItemTotal()
+
+			itemsStr = replaceField(itemsStr, "Title", fmt.Sprint(cfg.Items[i].Title))
+			itemsStr = replaceField(itemsStr, "Qty", fmt.Sprint(cfg.Items[i].Quantity))
+			itemsStr = replaceField(itemsStr, "Unit", fmt.Sprint(cfg.Items[i].Unit))
+			itemsStr = replaceField(itemsStr, "Price", cfg.Items[i].Price.String())
+			itemsStr = replaceField(itemsStr, "Amount", cfg.Items[i].Amount.String())
+			itemsStr = replaceField(itemsStr, "VR", fmt.Sprintf("%d%%", cfg.Items[i].VatRate))
+			itemsStr = replaceField(itemsStr, "VA", fmt.Sprint(cfg.Items[i].VatAmount.String()))
+			itemsStr = replaceField(itemsStr, "Total", fmt.Sprint(cfg.Items[i].Total))
+
+			amountSum = amountSum.Add(cfg.Items[i].Amount)
+			vatSum = vatSum.Add(cfg.Items[i].VatAmount)
+			totSum = totSum.Add(cfg.Items[i].Total)
+
 		}
-		result = insertRows(result, "Items", items)
+		result = InsertRows(result, "Items", itemsStr)
 	}
+
+	result = replaceField(result, "ASum", amountSum.String())
+	result = replaceField(result, "TaxSum", vatSum.String())
+	result = replaceField(result, "TotSum", totSum.String())
 
 	return result
 }

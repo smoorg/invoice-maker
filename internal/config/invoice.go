@@ -59,13 +59,13 @@ type InvoiceItem struct {
 	Total decimal.Decimal
 }
 
-func (i *Invoice) CalculateInvoice() {
-	for _, v := range i.Items {
-		v.CalculateTotal()
+func (item *Invoice) CalculateInvoice() {
+	for i := range item.Items {
+		item.Items[i].CalculateItemTotal()
 	}
 }
 
-func (i *InvoiceItem) CalculateTotal() {
+func (i *InvoiceItem) CalculateItemTotal() {
 	i.Amount = CalculateAmount(i.Price, i.Quantity)
 	if i.VatRate > 0 {
 		i.VatAmount = CalculateVatAmount(i.Amount, i.VatRate)

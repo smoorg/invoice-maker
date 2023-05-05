@@ -19,8 +19,8 @@ const (
 	PageReceiverList string = "receiver_list"
 
 	PageConfig   string = "config"    // General configuration page
-	PageModal    string = "modal"     // we expect just single modal at once
-	PageErrModal string = "err_modal" // we expect just single error modal at once, can overlap existing modal
+	PageModal    string = "modal"     // We expect just single modal at once
+	PageErrModal string = "err_modal" // We expect just single error modal at once, can overlap existing modal
 )
 
 type TUI struct {

@@ -15,7 +15,7 @@ import (
 func Render(tui *types.TUI) {
 	tui.AddAndSwitchToPage(
 		types.PageInvoiceAdd,
-		modal.Modal(tui, types.PageInvoiceList, addInvoice(tui), 50, 20, ""),
+		addInvoice(tui),
 	)
 }
 
@@ -45,6 +45,7 @@ func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *conf
 	form := tview.NewForm()
 
 	receivers := []string{}
+	paymentTypes := []string{"Cash", "Transfer"}
 	for _, r := range tui.Config.Receivers {
 		receivers = append(receivers, fmt.Sprint(r.Name))
 	}
@@ -62,6 +63,9 @@ func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *conf
 			if optionIndex >= 0 {
 				data.Receiver = tui.Config.Receivers[optionIndex]
 			}
+		}).
+		AddDropDown("PaymentType", paymentTypes, 0, func(option string, optionIndex int) {
+			data.PaymentType = option
 		})
 
 	//TODO: make it possible to have multiple issuer companies to pick
@@ -71,6 +75,7 @@ func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *conf
 		data.Items = append(data.Items, config.InvoiceItem{})
 	}
 
+	// invoice items start
 	form.
 		AddInputField("Unit", data.Items[0].Unit, 50, nil, func(text string) { data.Items[0].Unit = text }).
 		AddInputField("Price/unit", data.Items[0].Price.String(), 50, nil, func(text string) {
@@ -87,6 +92,9 @@ func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *conf
 			if vr, err := strconv.ParseUint(text, 10, 32); err == nil {
 				data.Items[0].VatRate = int32(vr)
 			}
+		}).
+		AddInputField("Title", fmt.Sprint(data.Items[0].Title), 50, nil, func(text string) {
+			data.Items[0].Title = text
 		})
 
 	// invoice items end

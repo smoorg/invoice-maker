@@ -3,7 +3,7 @@ package invoice_list
 import (
 	"invoice-maker/internal/gui/invoice_add"
 	"invoice-maker/internal/gui/invoice_edit"
-        "invoice-maker/internal/template"
+	"invoice-maker/internal/template"
 	"invoice-maker/internal/types"
 	"invoice-maker/internal/vimkeys"
 
@@ -62,7 +62,7 @@ func invoiceList(tui *types.TUI) tview.Primitive {
 }
 
 func printInvoice(tui *types.TUI) {
-	i := tui.Config.Invoices[selectedInvoice-1]
+	i := &tui.Config.Invoices[selectedInvoice-1]
 	dir, err := tui.Config.GetInvoiceDirectory()
 
 	tmpl, err := template.GetTemplate()

@@ -12,7 +12,7 @@ import (
 func TestApplyAddress(t *testing.T) {
 	templateStr := "| [ InvoiceAddress                     ] |"
 	length := len(templateStr)
-	i := config.Invoice{}
+	i := &config.Invoice{}
 	i.Issuer.Address = "ul. Narutowicza 14B/2, 80-501 Gdańsk"
 
 	sut := template.ApplyInvoice(templateStr, "", i)
@@ -24,7 +24,7 @@ func TestApplyAddress(t *testing.T) {
 
 func TestApplyInvoiceRows(t *testing.T) {
 	templateStr := "| [ InvoiceAddress                     ] |\n [ Items ]\n"
-	i := config.Invoice{
+	i := &config.Invoice{
 		Items: []config.InvoiceItem{
 			{
 				Title:    "Cheese",
@@ -59,7 +59,7 @@ func TestTotalCalculations(t *testing.T) {
 	templateStr := "| [ IssuerAddress                     ] |\n[ Items                                     ]\n"
 	rowTemplate := "| [ Total                     ] |"
 
-	i := config.Invoice{}
+	i := &config.Invoice{}
 	i.Issuer.Address = "ul. Narutowicza 14B/2, 80-501 Gdańsk"
 
 	item := config.InvoiceItem{}

@@ -13,7 +13,7 @@ import (
 func Render(tui *types.TUI, row int) {
 	tui.AddAndSwitchToPage(
 		types.PageInvoiceEdit,
-		modal.Modal(tui, types.PageInvoiceList, editInvoice(tui, row), 50, 20, ""),
+		editInvoice(tui, row),
 	)
 }
 
