@@ -18,19 +18,19 @@ func Render(tui *types.TUI) {
 func HelpPage(tui *types.TUI) tview.Primitive {
 	t := tview.NewTable()
 
-	t.SetCell(1, 0, tview.NewTableCell("?"))
-	t.SetCell(1, 1, tview.NewTableCell(" - opens this help dialog"))
+	t.SetCellSimple(1, 0, "?")
+	t.SetCellSimple(1, 1, " - opens this help dialog")
 
-	t.SetCell(2, 0, tview.NewTableCell("←↑→↓"))
-	t.SetCell(3, 0, tview.NewTableCell("hjkl"))
+	t.SetCellSimple(2, 0, "←↑→↓")
+	t.SetCellSimple(3, 0, "hjkl")
 
-	t.SetCell(3, 1, tview.NewTableCell(" - navigate on lists and tables"))
+	t.SetCellSimple(3, 1, " - navigate on lists and tables")
 
-	t.SetCell(4, 0, tview.NewTableCell("Tab"))
-	t.SetCell(4, 1, tview.NewTableCell(" - navigate form inputs"))
+	t.SetCellSimple(4, 0, "Tab")
+	t.SetCellSimple(4, 1, " - navigate form inputs")
 
-	t.SetCell(5, 0, tview.NewTableCell("Esc"))
-	t.SetCell(5, 1, tview.NewTableCell(" - cancel or go back"))
+	t.SetCellSimple(5, 0, "Esc")
+	t.SetCellSimple(5, 1, " - cancel or go back")
 
 	f := tview.NewGrid()
 	f.SetTitle(" MANUAL ")

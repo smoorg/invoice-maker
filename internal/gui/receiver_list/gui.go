@@ -22,14 +22,14 @@ func ListReceivers(tui *types.TUI) tview.Primitive {
 	table := tview.NewTable().SetSelectable(true, false).SetBorders(true)
 
 	table.SetFixed(0, 2)
-	table.SetCell(0, 0, tview.NewTableCell("Name"))
-	table.SetCell(0, 1, tview.NewTableCell("Address"))
-	table.SetCell(0, 2, tview.NewTableCell("Tax ID"))
+	table.SetCellSimple(0, 0, "Name")
+	table.SetCellSimple(0, 1, "Address")
+	table.SetCellSimple(0, 2, "Tax ID")
 	if len(tui.Config.Receivers) > 0 {
 		for i, r := range tui.Config.Receivers {
-			table.SetCell(i+1, 0, tview.NewTableCell(r.Name))
-			table.SetCell(i+1, 1, tview.NewTableCell(r.Address))
-			table.SetCell(i+1, 2, tview.NewTableCell(r.TaxID))
+			table.SetCellSimple(i+1, 0, r.Name)
+			table.SetCellSimple(i+1, 1, r.Address)
+			table.SetCellSimple(i+1, 2, r.TaxID)
 		}
 	}
 

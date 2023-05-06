@@ -20,21 +20,22 @@ var selectedInvoice = 1
 func invoiceList(tui *types.TUI) tview.Primitive {
 	table := tview.NewTable().SetSelectable(true, false).SetBorders(true)
 
-	table.SetCell(0, 0, tview.NewTableCell("Invoice No.")).
-		SetCell(0, 1, tview.NewTableCell("InvoiceDate")).
-		SetCell(0, 2, tview.NewTableCell("DueDate")).
-		SetCell(0, 3, tview.NewTableCell("Receiver")).
-		SetCell(0, 4, tview.NewTableCell("Issuer")).
-		SetCell(0, 5, tview.NewTableCell("PaymentType"))
+	table.
+		SetCellSimple(0, 0, "Invoice No.").
+		SetCellSimple(0, 1, "InvoiceDate").
+		SetCellSimple(0, 2, "DueDate").
+		SetCellSimple(0, 3, "Receiver").
+		SetCellSimple(0, 4, "Issuer").
+		SetCellSimple(0, 5, "PaymentType")
 
 	for i, invoice := range tui.Config.Invoices {
 		table.
-			SetCell(i+1, 0, tview.NewTableCell(invoice.InvoiceNo)).
-			SetCell(i+1, 1, tview.NewTableCell(invoice.InvoiceDate)).
-			SetCell(i+1, 2, tview.NewTableCell(invoice.DueDate)).
-			SetCell(i+1, 3, tview.NewTableCell(invoice.Receiver.Name)).
-			SetCell(i+1, 4, tview.NewTableCell(invoice.Issuer.Name)).
-			SetCell(i+1, 5, tview.NewTableCell(invoice.PaymentType))
+			SetCellSimple(i+1, 0, invoice.InvoiceNo).
+			SetCellSimple(i+1, 1, invoice.InvoiceDate).
+			SetCellSimple(i+1, 2, invoice.DueDate).
+			SetCellSimple(i+1, 3, invoice.Receiver.Name).
+			SetCellSimple(i+1, 4, invoice.Issuer.Name).
+			SetCellSimple(i+1, 5, invoice.PaymentType)
 	}
 
 	table.Select(selectedInvoice, 0)
