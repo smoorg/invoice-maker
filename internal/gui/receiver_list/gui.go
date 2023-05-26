@@ -15,10 +15,10 @@ import (
 var selectedRow int = 0
 
 func Render(tui *types.TUI) {
-	tui.Pages.AddPage(types.PageReceiverList, ListReceivers(tui), true, false)
+	tui.Pages.AddPage(types.PageReceiverList, listReceivers(tui), true, false)
 }
 
-func ListReceivers(tui *types.TUI) tview.Primitive {
+func listReceivers(tui *types.TUI) tview.Primitive {
 	table := tview.NewTable().SetSelectable(true, false).SetBorders(true)
 
 	table.SetFixed(0, 2)

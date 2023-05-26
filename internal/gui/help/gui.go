@@ -1,7 +1,6 @@
 package help
 
 import (
-	"invoice-maker/internal/gui/modal"
 	"invoice-maker/internal/types"
 
 	"github.com/gdamore/tcell/v2"
@@ -9,13 +8,12 @@ import (
 )
 
 func Render(tui *types.TUI) {
-	tui.AddAndSwitchToPage(
-		types.PageHelp,
-		modal.Modal(tui, tui.ActivePage, HelpPage(tui), 50, 11, "Add Receiver"),
-	)
+
+	t := helpPage(tui)
+	tui.AddAndSwitchToPage(types.PageHelp, t)
 }
 
-func HelpPage(tui *types.TUI) tview.Primitive {
+func helpPage(tui *types.TUI) tview.Primitive {
 	t := tview.NewTable()
 
 	t.SetCellSimple(1, 0, "?")
@@ -27,7 +25,10 @@ func HelpPage(tui *types.TUI) tview.Primitive {
 	t.SetCellSimple(3, 1, " - navigate on lists and tables")
 
 	t.SetCellSimple(4, 0, "Tab")
-	t.SetCellSimple(4, 1, " - navigate form inputs")
+	t.SetCellSimple(4, 1, " - navigate forward in forms")
+
+	t.SetCellSimple(4, 0, "Shift + Tab")
+	t.SetCellSimple(4, 1, " - navigate backwards in forms")
 
 	t.SetCellSimple(5, 0, "Esc")
 	t.SetCellSimple(5, 1, " - cancel or go back")
@@ -44,7 +45,7 @@ func HelpPage(tui *types.TUI) tview.Primitive {
 
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if eventKey.Key() == tcell.KeyEsc {
-		tui.SwitchToPage(types.PageReceiverList)
+		tui.SwitchToPage(tui.PreviousPage)
 		return nil
 	}
 

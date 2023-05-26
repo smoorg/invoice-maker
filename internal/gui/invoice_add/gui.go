@@ -122,7 +122,7 @@ func saveInvoice(tui *types.TUI, data *config.Invoice) {
 }
 
 func goBack(tui *types.TUI) {
-	tui.SwitchToPage(types.PageInvoiceList)
+	tui.SwitchToPrevious()
 }
 
 func addInvoice(tui *types.TUI) tview.Primitive {

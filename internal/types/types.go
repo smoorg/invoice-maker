@@ -8,7 +8,7 @@ import (
 
 const (
 	PageDefault    string = "default"     // Menu page
-	PageHelp              = "help"        // Help modal
+	PageHelp       string = "help"        // Help modal
 	PageIssuerEdit string = "issuer_edit" // Edit issuer details. There are just one available for the time being.
 
 	PageInvoiceAdd  string = "invoice_add"
@@ -19,37 +19,45 @@ const (
 	PageReceiverEdit string = "receiver_edit"
 	PageReceiverList string = "receiver_list"
 
-	PageConfig   string = "config"    // General configuration page
-	PageModal    string = "modal"     // We expect just single modal at once
-	PageErrModal string = "err_modal" // We expect just single error modal at once, can overlap existing modal
+	PageConfig string = "config" // General configuration page
+	PageModal  string = "modal"  // We expect just single modal at once
 )
 
 type TUI struct {
-	App        *tview.Application
-	Pages      *tview.Pages
-	Config     *config.Config
-	ActivePage string
-	Rerender   func()
+	App          *tview.Application
+	Pages        *tview.Pages
+	Config       *config.Config
+	PreviousPage string // Previously active page (i.e. to show modal on top of it or go back)
+	ActivePage   string // Active page,. It also impacts which HandleEvents function is used currently.
+	Rerender     func()
+}
+
+func (tui *TUI) RefreshConfig() {
+	cfg, err := config.GetConfig()
+	if err != nil {
+		tui.Fatal(err)
+	}
+	tui.Config = cfg
+}
+
+func (tui *TUI) SwitchToNext(nextPage string) {
+	tui.ActivePage, tui.PreviousPage = nextPage, tui.ActivePage
+}
+
+func (tui *TUI) SwitchToPrevious() {
+	tui.ActivePage, tui.PreviousPage = tui.PreviousPage, tui.ActivePage
 }
 
 func (tui *TUI) SwitchToPage(page string) {
-	cfg, err := config.GetConfig()
-	if err != nil {
-		tui.Fatal(err)
-	}
-	tui.Config = cfg
-
-	tui.ActivePage = page
+	tui.RefreshConfig()
+	tui.SwitchToNext(page)
 	tui.Rerender()
 	tui.Pages.SwitchToPage(page)
 }
-func (tui *TUI) AddAndSwitchToPage(page string, item tview.Primitive) {
-	cfg, err := config.GetConfig()
-	if err != nil {
-		tui.Fatal(err)
-	}
-	tui.Config = cfg
 
-	tui.ActivePage = page
+func (tui *TUI) AddAndSwitchToPage(page string, item tview.Primitive) {
+	tui.RefreshConfig()
+	tui.SwitchToNext(page)
+
 	tui.Pages.AddAndSwitchToPage(page, item, true)
 }

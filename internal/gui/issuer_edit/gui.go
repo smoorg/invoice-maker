@@ -9,7 +9,11 @@ import (
 )
 
 func Render(tui *types.TUI) {
-	tui.Pages.AddPage(types.PageIssuerEdit, modal.Modal(tui, types.PageDefault, EditIssuer(tui), 50, 17, "Edit issuer"), true, false)
+	tui.Pages.AddPage(
+		types.PageIssuerEdit,
+		modal.Modal(tui, types.PageIssuerEdit, types.PageDefault, EditIssuer(tui), 50, 17, "Edit issuer"),
+		true,
+		false)
 }
 
 func goBack(tui *types.TUI) {

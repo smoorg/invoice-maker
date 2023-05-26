@@ -12,8 +12,13 @@ import (
 func Render(tui *types.TUI, row int) {
 	tui.AddAndSwitchToPage(
 		types.PageReceiverEdit,
-		modal.Modal(tui, types.PageReceiverList, editReceiver(tui, row), 50, 13, ""),
+		modal.Modal(tui, types.PageReceiverEdit, types.PageReceiverList, editReceiver(tui, row), 50, 13, ""),
 	)
+}
+
+func goBack(tui *types.TUI) {
+	tui.Pages.RemovePage(types.PageReceiverEdit)
+	tui.SwitchToPage(types.PageReceiverList)
 }
 
 func editReceiver(tui *types.TUI, row int) tview.Primitive {
@@ -21,14 +26,11 @@ func editReceiver(tui *types.TUI, row int) tview.Primitive {
 
 	save := func() {
 		tui.Config.WriteReceiver(r, row)
-		tui.Rerender()
-		tui.SwitchToPage(types.PageReceiverList)
-		tui.Pages.RemovePage(types.PageReceiverEdit)
+		goBack(tui)
 	}
 
 	cancel := func() {
-		tui.SwitchToPage(types.PageReceiverList)
-		tui.Pages.RemovePage(types.PageReceiverEdit)
+		goBack(tui)
 	}
 
 	return receiver_add.AddOrEditReceiver(&r, "Edit Receiver", save, cancel)
@@ -36,8 +38,7 @@ func editReceiver(tui *types.TUI, row int) tview.Primitive {
 
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if eventKey.Key() == tcell.KeyEsc {
-		tui.SwitchToPage(types.PageReceiverList)
-		tui.Pages.RemovePage(types.PageReceiverEdit)
+		goBack(tui)
 	}
 	return eventKey
 }

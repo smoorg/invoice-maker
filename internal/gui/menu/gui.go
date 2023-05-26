@@ -2,6 +2,7 @@ package menu
 
 import (
 	config_page "invoice-maker/internal/gui/config_page"
+	"invoice-maker/internal/gui/help"
 	"invoice-maker/internal/types"
 
 	"github.com/gdamore/tcell/v2"
@@ -24,7 +25,14 @@ func MenuPage(tui *types.TUI) *tview.List {
 		func() { tui.SwitchToPage(types.PageReceiverList) })
 
 	page.AddItem("Config", "General configuration of the program", 'c',
-		func() { config_page.Render(tui) })
+		func() {
+			config_page.Render(tui)
+		})
+
+	page.AddItem("Help", "Help page", 'c',
+		func() {
+			help.Render(tui)
+		})
 
 	return page
 }

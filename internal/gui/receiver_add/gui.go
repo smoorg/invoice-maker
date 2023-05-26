@@ -28,7 +28,7 @@ func AddOrEditReceiver(company *config.Company, title string, save func(), cance
 func Render(tui *types.TUI) {
 	tui.AddAndSwitchToPage(
 		types.PageReceiverAdd,
-		modal.Modal(tui, types.PageReceiverList, AddReceiver(tui), 50, 11, "Add Receiver"),
+		modal.Modal(tui, types.PageReceiverAdd, types.PageReceiverList, AddReceiver(tui), 50, 11, "Add Receiver"),
 	)
 }
 
@@ -54,7 +54,7 @@ func AddReceiver(tui *types.TUI) tview.Primitive {
 
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if eventKey.Key() == tcell.KeyEsc {
-		tui.SwitchToPage(types.PageReceiverList)
+		tui.SwitchToPrevious()
 		return nil
 	}
 

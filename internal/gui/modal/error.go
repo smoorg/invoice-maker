@@ -15,9 +15,9 @@ func Error(tui *types.TUI, errMsg string, bgPageName string, width int, height i
 		SetText(errMsg).
 		AddButtons([]string{"OK"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-			tui.Pages.RemovePage(types.PageErrModal)
+			tui.Pages.RemovePage(types.PageModal)
 			back()
 		})
 
-	tui.AddAndSwitchToPage(types.PageErrModal, Modal(tui, bgPageName, m, width, height, title))
+	tui.AddAndSwitchToPage(types.PageModal, Modal(tui, types.PageModal, bgPageName, m, width, height, title))
 }

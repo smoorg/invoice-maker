@@ -15,7 +15,7 @@ var title = "General Configuration"
 func Render(tui *types.TUI) {
 	tui.AddAndSwitchToPage(
 		types.PageConfig,
-		modal.Modal(tui, types.PageDefault, configPage(tui), 50, 11, title),
+		modal.Modal(tui, types.PageConfig, types.PageDefault, configPage(tui), 50, 11, title),
 	)
 }
 
@@ -51,8 +51,7 @@ func configPage(tui *types.TUI) *tview.Form {
 
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if eventKey.Key() == tcell.KeyEsc {
-		tui.Pages.RemovePage(types.PageConfig)
-		tui.SwitchToPage(types.PageDefault)
+		tui.SwitchToPrevious()
 		return nil
 	}
 
