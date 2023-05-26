@@ -7,9 +7,11 @@ import (
 	"invoice-maker/internal/gui/invoice_add"
 	"invoice-maker/internal/gui/invoice_edit"
 	"invoice-maker/internal/gui/invoice_list"
+	"invoice-maker/internal/gui/invoice_print_modal"
 	"invoice-maker/internal/gui/issuer_edit"
 	"invoice-maker/internal/gui/menu"
 	"invoice-maker/internal/gui/modal"
+
 	"invoice-maker/internal/gui/receiver_add"
 	"invoice-maker/internal/gui/receiver_edit"
 	"invoice-maker/internal/gui/receiver_list"
@@ -75,6 +77,8 @@ func eventHandler(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 
 	case types.PageModal:
 		return modal.HandleEvents(eventKey, tui)
+	case types.PagePrintModal:
+		return invoiceprintmodal.HandleEvents(eventKey, tui)
 
 	case types.PageHelp:
 		return help.HandleEvents(eventKey, tui)

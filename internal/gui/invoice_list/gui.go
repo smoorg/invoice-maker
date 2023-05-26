@@ -3,6 +3,7 @@ package invoice_list
 import (
 	"invoice-maker/internal/gui/invoice_add"
 	"invoice-maker/internal/gui/invoice_edit"
+	"invoice-maker/internal/gui/invoice_print_modal"
 	"invoice-maker/internal/types"
 	"invoice-maker/internal/vimkeys"
 
@@ -82,7 +83,11 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	}
 
 	if eventKey.Rune() == 'p' {
-		printInvoice(tui)
+		path, err := printInvoice(tui)
+		if err != nil {
+			return nil
+		}
+		invoiceprintmodal.Render(tui, path)
 	}
 
 	return nil

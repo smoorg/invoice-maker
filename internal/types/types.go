@@ -20,7 +20,9 @@ const (
 	PageReceiverList string = "receiver_list"
 
 	PageConfig string = "config" // General configuration page
-	PageModal  string = "modal"  // We expect just single modal at once
+
+	PageModal      string = "modal" // We expect just single modal at once
+	PagePrintModal string = "print_modal"
 )
 
 type TUI struct {
@@ -41,7 +43,8 @@ func (tui *TUI) RefreshConfig() {
 }
 
 func (tui *TUI) SwitchToNext(nextPage string) {
-	tui.ActivePage, tui.PreviousPage = nextPage, tui.ActivePage
+	tui.PreviousPage = tui.ActivePage
+	tui.ActivePage = nextPage
 }
 
 func (tui *TUI) SwitchToPrevious() {
@@ -56,8 +59,9 @@ func (tui *TUI) SwitchToPage(page string) {
 }
 
 func (tui *TUI) AddAndSwitchToPage(page string, item tview.Primitive) {
-	tui.RefreshConfig()
 	tui.SwitchToNext(page)
+	tui.RefreshConfig()
 
-	tui.Pages.AddAndSwitchToPage(page, item, true)
+	tui.Pages.AddPage(page, item, true, true)
+
 }
