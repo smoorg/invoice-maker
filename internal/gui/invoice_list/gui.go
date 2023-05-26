@@ -3,7 +3,6 @@ package invoice_list
 import (
 	"invoice-maker/internal/gui/invoice_add"
 	"invoice-maker/internal/gui/invoice_edit"
-	"invoice-maker/internal/template"
 	"invoice-maker/internal/types"
 	"invoice-maker/internal/vimkeys"
 
@@ -60,28 +59,6 @@ func invoiceList(tui *types.TUI) tview.Primitive {
 		)
 
 	return view
-}
-
-func printInvoice(tui *types.TUI) {
-	i := &tui.Config.Invoices[selectedInvoice-1]
-	dir, err := tui.Config.GetInvoiceDirectory()
-
-	tmpl, err := template.GetTemplate()
-	if err != nil {
-		tui.Fatal("missing template")
-	}
-
-	rowTemplate, err := template.GetRowTemplate()
-	if err != nil {
-		tui.Fatal("unable to locate row template")
-	}
-
-	inv := template.ApplyInvoice(string(tmpl), string(rowTemplate), i)
-
-	_, err = template.SaveInvoice(inv, dir)
-	if err != nil {
-		tui.Fatal("missing row template", err)
-	}
 }
 
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {

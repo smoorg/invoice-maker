@@ -3,7 +3,7 @@
 │  Faktura nr:        │   data wystawienia:     │  data dostawy / wykonania usługi:            │
 │  [   InvoiceNo    ] │   [    InvoiceDate    ] │  [     DeliveryDate     ]                    │
 ├─────────────────────┴─────────────────────────┼──────────────────────────────────────────────┤
-│ Issuer:                                       │ Receiver:                                    │
+│ Wystawiający:                                 │ Odbiorca:                                    │
 │ [ IssuerName                                ] │ [ ReceiverName                             ] │ 
 │ [ IssuerAddress                             ] │ [ ReceiverAddress                          ] │ 
 │ [ IssuerTaxID                               ] │ [ ReceiverTaxID                            ] │ 

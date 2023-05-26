@@ -14,6 +14,7 @@ import (
 	"invoice-maker/internal/config"
 	"invoice-maker/internal/pdf"
 
+	"github.com/gomarkdown/markdown"
 	"github.com/shopspring/decimal"
 )
 
@@ -134,7 +135,7 @@ func SaveInvoice(invoice string, dirname string) (string, error) {
 		return "", errors.New("issue while reading markdown file: " + err.Error())
 	}
 
-	htmlBytes := pdf.ToHTML(bytes)
+	htmlBytes := markdown.ToHTML(bytes, nil, nil)
 	htmlName := name + ".html"
 	if err := os.WriteFile(filepath.Join(dirname, htmlName), htmlBytes, 0744); err != nil {
 		return "", errors.New("issue while writting html file: " + err.Error())
@@ -148,5 +149,6 @@ func SaveInvoice(invoice string, dirname string) (string, error) {
 		return "", errors.New("issue while writting pdf file: " + err.Error())
 	}
 
-	return dirname, nil
+	path := filepath.Join(dirname, pdfName)
+	return path, nil
 }
