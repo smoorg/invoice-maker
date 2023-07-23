@@ -6,6 +6,7 @@ import (
 	"invoice-maker/internal/gui/invoice_print_modal"
 	"invoice-maker/internal/types"
 	"invoice-maker/internal/vimkeys"
+	"log"
 
 	tcell "github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -87,6 +88,10 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 		if err != nil {
 			return nil
 		}
+		if path == "" {
+			log.Fatal("missing pdf path")
+		}
+
 		invoiceprintmodal.Render(tui, path)
 	}
 

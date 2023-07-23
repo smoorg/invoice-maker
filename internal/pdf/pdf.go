@@ -1,23 +1,55 @@
 package pdf
 
 import (
-	"github.com/phpdave11/gofpdf"
 	"os"
+	"strings"
+
+	"github.com/phpdave11/gofpdf"
 )
 
-func PrintInvoice(txt string, pdfFileName string) error {
-	f := gofpdf.New("P", "mm", "A4", "/usr/share/fonts/TTF/")
-	f.SetFont("Arial", "B", 12)
+var file *gofpdf.Fpdf
 
-	if fontBytes, err := getCustomFont(); err == nil {
-		f.AddUTF8FontFromBytes("JetBrainsMono", "", fontBytes)
-		f.SetFont("JetBrainsMono", "", 8)
+func InitializePdf(fontdir string) {
+	if fontdir == "" {
+		//TODO: make it more generic to work on BSD and Windows
+		fontdir = "/usr/share/fonts/TTF/"
+	}
+	file = gofpdf.New("P", "mm", "A4", fontdir)
+	file.AddPage()
+}
+
+// gofpdf expects "B" for bold or "I" for italic as a font style, may be combined
+func getFpdfStyle(f string) string {
+	style := ""
+	switch {
+	case strings.Contains(f, "Bold"):
+		style += "B"
+	case strings.Contains(f, "Italic"):
+		style += "I"
+	}
+	return style
+}
+
+func SetFont(fontname string, fontstyle string, fontpath string, size float64) error {
+	fontBytes, err := os.ReadFile(fontpath)
+	if err != nil {
+		return err
 	}
 
-	f.AddPage()
-	f.MultiCell(0, 4, txt, "", "", false)
+	fpdf_style := getFpdfStyle(fontstyle)
 
-	err := f.OutputFileAndClose(pdfFileName)
+	file.AddUTF8FontFromBytes(fontname, fpdf_style, fontBytes)
+	file.SetFont(fontname, fpdf_style, size)
+
+	return nil
+}
+
+func SetText(txt string, width float64, height float64) {
+	file.MultiCell(width, height, txt, "", "", false)
+}
+
+func Output(path string) error {
+	err := file.OutputFileAndClose(path)
 	if err != nil {
 		return err
 	}
@@ -25,9 +57,22 @@ func PrintInvoice(txt string, pdfFileName string) error {
 	return nil
 }
 
-func getCustomFont() ([]byte, error) {
-	fontPath := "/usr/share/fonts/TTF/JetBrainsMono-Regular.ttf"
-	fontBytes, err := os.ReadFile(fontPath)
+func PrintInvoice(txt string, pdfFileName string, fontpath string) error {
+	//if err := SetFont("Arial", "B", 12); err != nil {
+	//    return err
+	//}
 
-	return fontBytes, err
+	if err := SetFont("JetBrainsMono", "", fontpath, 8); err != nil {
+		return err
+	}
+
+	file.AddPage()
+	SetText(txt, 0, 4)
+
+	err := file.OutputFileAndClose(pdfFileName)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

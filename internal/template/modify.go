@@ -1,18 +1,12 @@
 package template
 
 import (
-	"errors"
 	"fmt"
-	"log"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 	"unicode/utf8"
 
 	"invoice-maker/internal/config"
-	"invoice-maker/internal/pdf"
 
 	"github.com/gomarkdown/markdown"
 	"github.com/shopspring/decimal"
@@ -104,51 +98,7 @@ func ApplyInvoice(templateStr string, rowTemplate string, cfg *config.Invoice) (
 	return result
 }
 
-func saveFile(dirname string, filename string, content string) error {
-	if err := os.MkdirAll(dirname, 0744); err != nil {
-		return err
-	}
-
-	mddir := filepath.Join(dirname, filename)
-
-	file, err := os.Create(mddir)
-	if err != nil {
-		return err
-	}
-	if _, err := file.WriteString(content); err != nil {
-		log.Fatal("write string err", err)
-		return err
-	}
-	return nil
-}
-
-func SaveInvoice(invoice string, dirname string) (string, error) {
-	name := time.Now().Format("2006-01-02 15:04:05")
-	mdName := name + ".md"
-
-	if err := saveFile(dirname, mdName, invoice); err != nil {
-		return "", errors.New("issue while writting markdown file: " + err.Error())
-	}
-
-	bytes, err := os.ReadFile(filepath.Join(dirname, mdName))
-	if err != nil {
-		return "", errors.New("issue while reading markdown file: " + err.Error())
-	}
-
-	htmlBytes := markdown.ToHTML(bytes, nil, nil)
-	htmlName := name + ".html"
-	if err := os.WriteFile(filepath.Join(dirname, htmlName), htmlBytes, 0744); err != nil {
-		return "", errors.New("issue while writting html file: " + err.Error())
-	}
-
-	pdfName := name + ".pdf"
-	re := regexp.MustCompile(`<?.pre>`)
-	pdfContent := re.ReplaceAllString(invoice, "")
-	err = pdf.PrintInvoice(pdfContent, filepath.Join(dirname, pdfName))
-	if err != nil {
-		return "", errors.New("issue while writting pdf file: " + err.Error())
-	}
-
-	path := filepath.Join(dirname, pdfName)
-	return path, nil
+func ToHTML(invoice string) ([]byte, error) {
+	htmlBytes := markdown.ToHTML([]byte(invoice), nil, nil)
+	return htmlBytes, nil
 }
