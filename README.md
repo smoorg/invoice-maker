@@ -14,6 +14,10 @@ It can be used as database of all your partners, or just a simple way to generat
 
 Keep in mind not everything works as expected. I am working on it in my spare time just for fun.
 
+# Documentation
+
+All the basic docs are in [man/](man/) folder for now. In case you need more there's a help view with all of the basic keybindings. Most views stores all keybindings at the bottom with short instructions.
+
 ## How to use it
 
 Makefile is prepared to use it straight out of root folder. Alternatively, all the code is in `src` so you can `cd` to it and just `go build` instead. 
@@ -38,7 +42,8 @@ make test
 
 ## Getting started
 
-1. For the time being all you need lies in `/templates` folder on the root of this project. Content of it is supposed to land in `~/.config/invoice-maker` and be modified as necessary.
+1. invoice-maker uses `$XDG_CONFIG/invoice-maker` as default configuration directory. If you want to change that behavior check [man/](man/) for more info how.
+1. For the time being all you need to customize lies in `/templates` folder on the root of this project. Content of it is supposed to land in `~/.config/invoice-maker` and be modified as necessary.
 1. After initial run please go to `Config` and specify where your printed invoices should land to i.e. `/home/user/Documents/invoices`. Please also make sure you have write privileges to that folder.
 
 ## Keys
