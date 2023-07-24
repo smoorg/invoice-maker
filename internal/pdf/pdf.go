@@ -56,23 +56,3 @@ func Output(path string) error {
 
 	return nil
 }
-
-func PrintInvoice(txt string, pdfFileName string, fontpath string) error {
-	//if err := SetFont("Arial", "B", 12); err != nil {
-	//    return err
-	//}
-
-	if err := SetFont("JetBrainsMono", "", fontpath, 8); err != nil {
-		return err
-	}
-
-	file.AddPage()
-	SetText(txt, 0, 4)
-
-	err := file.OutputFileAndClose(pdfFileName)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}

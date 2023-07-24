@@ -36,6 +36,12 @@ func configPage(tui *types.TUI) *tview.Form {
 			return
 		}
 		tui.Config.Font.Style = opt
+
+		font, err := f.FindFonts(tui.Config.Font.Family, tui.Config.Font.Style)
+		if err != nil {
+			return
+		}
+		tui.Config.Font.Filepath = font[0].Filepath
 	}
 
 	page.AddDropDown("Font Family", ff, -1, func(option string, optionIndex int) {
