@@ -125,15 +125,24 @@ To print the invoice you have to pick it from the list on the invoice list view 
 
 It will be stored in the folder you specified in the `Config` section. It expects absolute directory so keep that in mind!
 
+## Screenshots
+
+### Main menu
+
+![](menu.png "Main menu")
+
+### Config modal
+
+![](config.png "Config")
+
 ## TODO
 
-- [ ] Create proper way to deploy to AUR and other distros. .deb and arch build will come first.
-- [ ] Error handling that stops application and returns log in the console.
 - [x] Error modal with info what went wrong.
-- [ ] Show confirmation of print operation.
+- [x] Show confirmation of print operation.
+- [x] Add a way to provide your own font and its render params. For now hardcoded to JetbrainsMono-Regular.ttf
 - [ ] Figure out how to store $HOME or `~` in the invoice directory. 
-- [ ] Add a way to provide your own font and its render params. For now hardcoded to JetbrainsMono-Regular.ttf
+- [ ] Error handling that stops application and returns log in the console.
 - [ ] Documentation & packaging
-    - [ ] Write documentation of all the key bindings shown as modal under `H` or `F1`
-    - [ ] Write man docs or move that README to man format.
+    - [x] Write documentation of all the key bindings shown as modal under `H` or `F1`
+    - [x] Write man docs or move that README to man format.
     - [ ] Create proper way to deploy to AUR and other distros. .deb and arch build will come first.
