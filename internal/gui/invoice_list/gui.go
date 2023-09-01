@@ -78,7 +78,6 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	}
 
 	if eventKey.Rune() == 'a' {
-		tui.ActivePage = types.PageInvoiceAdd
 		invoice_add.Render(tui)
 		return nil
 	}
