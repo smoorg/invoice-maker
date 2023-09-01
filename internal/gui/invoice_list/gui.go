@@ -85,10 +85,12 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if eventKey.Rune() == 'p' {
 		path, err := printInvoice(tui)
 		if err != nil {
+			log.Fatal("print invoide failed", err)
 			return nil
 		}
 		if path == "" {
 			log.Fatal("missing pdf path")
+			return nil
 		}
 
 		invoiceprintmodal.Render(tui, path)

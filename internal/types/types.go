@@ -37,7 +37,7 @@ type TUI struct {
 func (tui *TUI) RefreshConfig() {
 	cfg, err := config.GetConfig()
 	if err != nil {
-		tui.Fatal(err)
+		tui.Fatal("config refresh error: ", err)
 	}
 	tui.Config = cfg
 }

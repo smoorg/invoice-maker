@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -29,7 +30,18 @@ func replaceField(t string, label string, value string) string {
 		submatch := submatches[0]
 
 		offset := utf8.RuneCountInString(submatch) - utf8.RuneCountInString(value)
-		padding := strings.Repeat(" ", offset)
+
+		var padding string
+
+		// this is when amount of characters for a field value is less than field in the template
+		if offset < 0 {
+			log.Fatalf("offset for field '%s' is negative", label)
+		}
+
+		if offset > 0 {
+			padding = strings.Repeat(" ", offset)
+		}
+
 		finalLabel := value + padding
 
 		result = strings.ReplaceAll(result, submatch, finalLabel)

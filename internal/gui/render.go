@@ -33,7 +33,7 @@ func Run(tui *types.TUI) error {
 func Render(tui *types.TUI) {
 	cfg, err := config.GetConfig()
 	if err != nil {
-		tui.Fatal(err)
+		tui.Fatal("render error:", err)
 	}
 	tui.Config = cfg
 	setup(tui)
