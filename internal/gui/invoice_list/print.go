@@ -28,7 +28,10 @@ func printInvoice(tui *types.TUI) (string, error) {
 		return "", errors.New("unable to locate row template")
 	}
 
-	inv := template.ApplyInvoice(string(tmpl), string(rowTemplate), i)
+	inv, err := template.ApplyInvoice(string(tmpl), string(rowTemplate), i)
+	if err != nil {
+		return "", err
+	}
 
 	fonts, err := font.FindFonts(tui.Config.Font.Family, tui.Config.Font.Style)
 	if err != nil {
@@ -42,14 +45,14 @@ func printInvoice(tui *types.TUI) (string, error) {
 		return "", errors.New(errMsg)
 	}
 
-	htmlBytes, err := template.ToHTML(inv)
+	htmlBytes, err := template.ToHTML(*inv)
 
 	name := time.Now().Format("2006-01-02 15:04:05")
 	mdName := name + ".md"
 	htmlName := name + ".html"
 	pdfName := name + ".pdf"
 
-	if err := saveFile(dir, mdName, []byte(inv)); err != nil {
+	if err := saveFile(dir, mdName, []byte(*inv)); err != nil {
 		return "", errors.New("issue while writting markdown file: " + err.Error())
 	}
 	if err := saveFile(dir, htmlName, htmlBytes); err != nil {
@@ -57,7 +60,7 @@ func printInvoice(tui *types.TUI) (string, error) {
 	}
 
 	re := regexp.MustCompile(`<?.pre>`)
-	pdfContent := re.ReplaceAllString(inv, "")
+	pdfContent := re.ReplaceAllString(*inv, "")
 
 	pdf.InitializePdf("")
 
@@ -70,7 +73,6 @@ func printInvoice(tui *types.TUI) (string, error) {
 	path := filepath.Join(dir, pdfName)
 	if err := pdf.Output(path); err != nil {
 		panic("pdf output: " + err.Error())
-		return "", err
 	}
 
 	return path, nil

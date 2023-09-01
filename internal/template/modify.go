@@ -1,8 +1,8 @@
 package template
 
 import (
+	"errors"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -13,14 +13,12 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func replaceField(t string, label string, value string) string {
+func replaceField(result *string, label string, value string) error {
 	re := regexp.MustCompile(`\[\s*` + label + `\s*\]`)
 
-	var result = t
-
-	allSubmatches := re.FindAllStringSubmatch(t, -1)
+	allSubmatches := re.FindAllStringSubmatch(*result, -1)
 	if len(allSubmatches) == 0 {
-		return result
+		return nil
 	}
 
 	for _, submatches := range allSubmatches {
@@ -35,7 +33,7 @@ func replaceField(t string, label string, value string) string {
 
 		// this is when amount of characters for a field value is less than field in the template
 		if offset < 0 {
-			log.Fatalf("offset for field '%s' is negative", label)
+			return errors.New(fmt.Sprintf("offset for field '%s' is negative", label))
 		}
 
 		if offset > 0 {
@@ -44,10 +42,11 @@ func replaceField(t string, label string, value string) string {
 
 		finalLabel := value + padding
 
-		result = strings.ReplaceAll(result, submatch, finalLabel)
+		final := strings.ReplaceAll(*result, submatch, finalLabel)
+		*result = final
 	}
 
-	return result
+	return nil
 }
 
 func InsertRows(t string, label string, value string) string {
@@ -56,58 +55,71 @@ func InsertRows(t string, label string, value string) string {
 	return re.ReplaceAllString(t, value)
 }
 
-func ApplyInvoice(templateStr string, rowTemplate string, cfg *config.Invoice) (result string) {
-	result = templateStr
-
-	result = replaceField(result, "IssuerName", cfg.Issuer.Name)
-	result = replaceField(result, "IssuerAddress", cfg.Issuer.Address)
-	result = replaceField(result, "IssuerTaxID", cfg.Issuer.TaxID)
-	result = replaceField(result, "AccountNo", cfg.Issuer.Account)
-	result = replaceField(result, "IssuerBankName", cfg.Issuer.BankName)
-	result = replaceField(result, "IssuerBic", cfg.Issuer.BIC)
-
-	result = replaceField(result, "ReceiverName", cfg.Receiver.Name)
-	result = replaceField(result, "ReceiverAddress", cfg.Receiver.Address)
-	result = replaceField(result, "ReceiverTaxID", cfg.Receiver.TaxID)
-	result = replaceField(result, "PaymentType", cfg.PaymentType)
-
-	result = replaceField(result, "InvoiceNo", cfg.InvoiceNo)
-	result = replaceField(result, "InvoiceDate", cfg.InvoiceDate)
-	result = replaceField(result, "PaymentType", cfg.PaymentType)
-	result = replaceField(result, "DueDate", cfg.DueDate)
+func ApplyInvoice(templateStr string, rowTemplate string, cfg *config.Invoice) (*string, error) {
+	result := &templateStr
 
 	amountSum := decimal.NewFromInt32(0)
 	vatSum := decimal.NewFromInt32(0)
 	totSum := decimal.NewFromInt32(0)
 	if rowTemplate != "" && len(cfg.Items) > 0 {
-		itemsStr := ""
-
 		for i := range cfg.Items {
-			itemsStr += rowTemplate
-			cfg.Items[i].CalculateItemTotal()
-
-			itemsStr = replaceField(itemsStr, "Title", fmt.Sprint(cfg.Items[i].Title))
-			itemsStr = replaceField(itemsStr, "Qty", fmt.Sprint(cfg.Items[i].Quantity))
-			itemsStr = replaceField(itemsStr, "Unit", fmt.Sprint(cfg.Items[i].Unit))
-			itemsStr = replaceField(itemsStr, "Price", cfg.Items[i].Price.String())
-			itemsStr = replaceField(itemsStr, "Amount", cfg.Items[i].Amount.String())
-			itemsStr = replaceField(itemsStr, "VR", fmt.Sprintf("%d%%", cfg.Items[i].VatRate))
-			itemsStr = replaceField(itemsStr, "VA", fmt.Sprint(cfg.Items[i].VatAmount.String()))
-			itemsStr = replaceField(itemsStr, "Total", fmt.Sprint(cfg.Items[i].Total))
-
 			amountSum = amountSum.Add(cfg.Items[i].Amount)
 			vatSum = vatSum.Add(cfg.Items[i].VatAmount)
 			totSum = totSum.Add(cfg.Items[i].Total)
+		}
+
+		empty := ""
+		var itemsStr *string = &empty
+
+		for i := range cfg.Items {
+			*itemsStr += rowTemplate
+			cfg.Items[i].CalculateItemTotal()
+
+			itemFields := &map[string]string{
+				"Title":  fmt.Sprint(cfg.Items[i].Title),
+				"Qty":    fmt.Sprint(cfg.Items[i].Quantity),
+				"Unit":   fmt.Sprint(cfg.Items[i].Unit),
+				"Price":  fmt.Sprint(cfg.Items[i].Price.String()),
+				"Amount": fmt.Sprint(cfg.Items[i].Amount.String()),
+				"VR":     fmt.Sprintf("%d%%", cfg.Items[i].VatRate),
+				"VA":     fmt.Sprint(cfg.Items[i].VatAmount.String()),
+				"Total":  fmt.Sprint(cfg.Items[i].Total),
+			}
+
+			for k, v := range *itemFields {
+				if err := replaceField(itemsStr, k, v); err != nil {
+					return result, err
+				}
+			}
 
 		}
-		result = InsertRows(result, "Items", itemsStr)
+		*result = InsertRows(*result, "Items", *itemsStr)
+
 	}
-
-	result = replaceField(result, "ASum", amountSum.String())
-	result = replaceField(result, "TaxSum", vatSum.String())
-	result = replaceField(result, "TotSum", totSum.String())
-
-	return result
+	fields := &map[string]string{
+		"IssuerName":      cfg.Issuer.Name,
+		"IssuerAddress":   cfg.Issuer.Address,
+		"IssuerTaxID":     cfg.Issuer.TaxID,
+		"AccountNo":       cfg.Issuer.Account,
+		"IssuerBankName":  cfg.Issuer.BankName,
+		"IssuerBic":       cfg.Issuer.BIC,
+		"ReceiverName":    cfg.Receiver.Name,
+		"ReceiverAddress": cfg.Receiver.Address,
+		"ReceiverTaxID":   cfg.Receiver.TaxID,
+		"PaymentType":     cfg.PaymentType,
+		"InvoiceNo":       cfg.InvoiceNo,
+		"InvoiceDate":     cfg.InvoiceDate,
+		"DueDate":         cfg.DueDate,
+		"ASum":            amountSum.String(),
+		"TaxSum":          vatSum.String(),
+		"TotSum":          totSum.String(),
+	}
+	for k, v := range *fields {
+		if err := replaceField(result, k, v); err != nil {
+			return result, err
+		}
+	}
+	return result, nil
 }
 
 func ToHTML(invoice string) ([]byte, error) {
