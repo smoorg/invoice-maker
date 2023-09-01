@@ -21,8 +21,9 @@ const (
 
 	PageConfig string = "config" // General configuration page
 
-	PageModal      string = "modal" // We expect just single modal at once
-	PagePrintModal string = "print_modal"
+	PageModal             string = "modal" // We expect just single modal at once
+	PagePrintModal        string = "print_modal"
+	PagePrintFailureModal string = "print_failure_modal"
 )
 
 type TUI struct {

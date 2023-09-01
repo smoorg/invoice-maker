@@ -4,6 +4,7 @@ import (
 	"invoice-maker/internal/gui/invoice_add"
 	"invoice-maker/internal/gui/invoice_edit"
 	"invoice-maker/internal/gui/invoice_print_modal"
+	"invoice-maker/internal/gui/invoiceprintfailuremodal"
 	"invoice-maker/internal/types"
 	"invoice-maker/internal/vimkeys"
 	"log"
@@ -85,7 +86,7 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if eventKey.Rune() == 'p' {
 		path, err := printInvoice(tui)
 		if err != nil {
-			log.Fatal("print invoide failed", err)
+			invoiceprintfailuremodal.Render(tui, err.Error())
 			return nil
 		}
 		if path == "" {

@@ -8,6 +8,7 @@ import (
 	"invoice-maker/internal/gui/invoice_edit"
 	"invoice-maker/internal/gui/invoice_list"
 	"invoice-maker/internal/gui/invoice_print_modal"
+	"invoice-maker/internal/gui/invoiceprintfailuremodal"
 	"invoice-maker/internal/gui/issuer_edit"
 	"invoice-maker/internal/gui/menu"
 	"invoice-maker/internal/gui/modal"
@@ -79,6 +80,8 @@ func eventHandler(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 		return modal.HandleEvents(eventKey, tui)
 	case types.PagePrintModal:
 		return invoiceprintmodal.HandleEvents(eventKey, tui)
+	case types.PagePrintFailureModal:
+		return invoiceprintfailuremodal.HandleEvents(eventKey, tui)
 
 	case types.PageHelp:
 		return help.HandleEvents(eventKey, tui)
