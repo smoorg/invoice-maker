@@ -66,17 +66,19 @@ func (item *Invoice) CalculateInvoice() {
 }
 
 func (i *InvoiceItem) CalculateItemTotal() {
-	i.Amount = CalculateAmount(i.Price, i.Quantity)
-	if i.VatRate > 0 {
-		i.VatAmount = CalculateVatAmount(i.Amount, i.VatRate)
-	}
+	i.CalculateAmount()
+	i.CalculateVatAmount()
+
 	i.Total = i.Amount.Add(i.VatAmount)
 }
 
-func CalculateAmount(price decimal.Decimal, quantity int32) decimal.Decimal {
-	return price.Mul(decimal.NewFromInt32(quantity))
+func (i *InvoiceItem) CalculateAmount() {
+	i.Amount = i.Price.Mul(decimal.NewFromInt32(i.Quantity))
 }
 
-func CalculateVatAmount(amount decimal.Decimal, vatRate int32) decimal.Decimal {
-	return amount.Mul(decimal.NewFromInt32(vatRate).Div(decimal.NewFromInt32(100)))
+func (i *InvoiceItem) CalculateVatAmount() {
+	i.CalculateAmount()
+	if i.VatRate > 0 {
+		i.VatAmount = i.Amount.Mul(decimal.NewFromInt32(i.VatRate).Div(decimal.NewFromInt32(100)))
+	}
 }

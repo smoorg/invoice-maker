@@ -15,9 +15,13 @@ func TestApplyAddress(t *testing.T) {
 	i := &config.Invoice{}
 	i.Issuer.Address = "ul. Narutowicza 14B/2, 80-501 Gdańsk"
 
-	sut := template.ApplyInvoice(templateStr, "", i)
+	sut, err := template.ApplyInvoice(templateStr, "", i)
 
-	if length != len(sut) {
+	if err != nil {
+		t.Error("error thrown", err)
+	}
+
+	if length != len(*sut) {
 		t.Error("length mismatch")
 	}
 }
@@ -46,9 +50,13 @@ func TestApplyInvoiceRows(t *testing.T) {
 
 	rowTemplate := "│ [ Title                ] │ [Qty] │ [Unit]  │ [Price] │ [Amount] │ [VR]  │ [VA   ] │ [Total]  │"
 
-	sut := template.ApplyInvoice(templateStr, rowTemplate, i)
+	sut, err := template.ApplyInvoice(templateStr, rowTemplate, i)
 
-	lines := strings.Split(sut, "\n")
+	if err != nil {
+		t.Error("error thrown", err)
+	}
+
+	lines := strings.Split(*sut, "\n")
 	if len(lines) > 2 {
 		t.Error("too many lines")
 	}
@@ -70,9 +78,12 @@ func TestTotalCalculations(t *testing.T) {
 
 	i.Items = append(i.Items, item)
 
-	sut := template.ApplyInvoice(templateStr, rowTemplate, i)
+	sut, err := template.ApplyInvoice(templateStr, rowTemplate, i)
+	if err != nil {
+		t.Error("error thrown", err)
+	}
 
-	if !strings.Contains(sut, total.String()) {
+	if !strings.Contains(*sut, total.String()) {
 		t.Error("total invalid", sut, total)
 	}
 }

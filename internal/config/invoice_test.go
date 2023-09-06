@@ -10,12 +10,15 @@ import (
 )
 
 func TestPriceCalculation(t *testing.T) {
+	i := config.InvoiceItem{
+		Price:    decimal.NewFromInt32(1000),
+		Quantity: 23,
+	}
 
-	price := decimal.NewFromInt32(1000)
-	result := config.CalculateAmount(price, 22)
-	sut := result.String()
+	i.CalculateAmount()
+	sut := i.Amount.String()
 
-	if sut != "22000" {
+	if sut != "23000" {
 		t.Error("invalid sum", sut)
 	}
 }
@@ -23,21 +26,31 @@ func TestPriceCalculation(t *testing.T) {
 func TestVatCalculation(t *testing.T) {
 
 	{
-		price := decimal.NewFromInt32(1000)
-		result := config.CalculateVatAmount(price, 22)
-		sut := result.String()
 
-		if sut != "220" {
+		i := config.InvoiceItem{
+			Price:    decimal.NewFromInt32(1000),
+			Quantity: 1,
+			VatRate:  23,
+		}
+		i.CalculateVatAmount()
+
+		sut := i.VatAmount.String()
+		if sut != "230" {
 			t.Error("invalid vat", sut)
 		}
 	}
 
 	{
-		price := decimal.NewFromInt32(1)
-		result := config.CalculateVatAmount(price, 22)
-		sut := result.String()
+		i := config.InvoiceItem{
+			Price:    decimal.NewFromInt32(1),
+			Quantity: 1,
+			VatRate:  23,
+		}
 
-		if sut != "0.22" {
+		i.CalculateVatAmount()
+		sut := i.VatAmount.String()
+
+		if sut != "0.23" {
 			t.Error("invalid vat", sut)
 		}
 	}

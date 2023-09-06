@@ -55,19 +55,31 @@ func InsertRows(t string, label string, value string) string {
 	return re.ReplaceAllString(t, value)
 }
 
-func ApplyInvoice(templateStr string, rowTemplate string, cfg *config.Invoice) (*string, error) {
-	result := &templateStr
+func SumUp(items *[]config.InvoiceItem) (string, string, string) {
+	if len(*items) == 0 {
+		return "0", "0", "0"
+	}
 
 	amountSum := decimal.NewFromInt32(0)
 	vatSum := decimal.NewFromInt32(0)
 	totSum := decimal.NewFromInt32(0)
-	if rowTemplate != "" && len(cfg.Items) > 0 {
-		for i := range cfg.Items {
-			amountSum = amountSum.Add(cfg.Items[i].Amount)
-			vatSum = vatSum.Add(cfg.Items[i].VatAmount)
-			totSum = totSum.Add(cfg.Items[i].Total)
-		}
 
+	for _, item := range *items {
+		item.CalculateItemTotal()
+
+		amountSum = amountSum.Add(item.Amount)
+		vatSum = vatSum.Add(item.VatAmount)
+		totSum = totSum.Add(item.Total)
+	}
+
+	return amountSum.String(), vatSum.String(), totSum.String()
+}
+
+func ApplyInvoice(templateStr string, rowTemplate string, cfg *config.Invoice) (*string, error) {
+	result := &templateStr
+
+	amount, tax, total := SumUp(&cfg.Items)
+	if rowTemplate != "" && len(cfg.Items) > 0 {
 		empty := ""
 		var itemsStr *string = &empty
 
@@ -110,9 +122,9 @@ func ApplyInvoice(templateStr string, rowTemplate string, cfg *config.Invoice) (
 		"InvoiceNo":       cfg.InvoiceNo,
 		"InvoiceDate":     cfg.InvoiceDate,
 		"DueDate":         cfg.DueDate,
-		"ASum":            amountSum.String(),
-		"TaxSum":          vatSum.String(),
-		"TotSum":          totSum.String(),
+		"ASum":            amount,
+		"TaxSum":          tax,
+		"TotSum":          total,
 	}
 	for k, v := range *fields {
 		if err := replaceField(result, k, v); err != nil {
