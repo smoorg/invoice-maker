@@ -65,8 +65,8 @@ func (tui *TUI) SwitchToPage(page string) {
 }
 
 func (tui *TUI) AddAndSwitchToPage(page string, item tview.Primitive) {
-	tui.SwitchToNext(page)
 	tui.RefreshConfig()
+	tui.SwitchToNext(page)
 
 	tui.Pages.AddPage(page, item, true, true)
 

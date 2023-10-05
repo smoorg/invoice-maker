@@ -110,7 +110,6 @@ func configPage(tui *types.TUI) *tview.Form {
 		if err := tui.Config.WriteConfig(); err != nil {
 			modal.Error(tui, err.Error(), types.PageConfig, 40, 5, "Error", func() { Render(tui) })
 		}
-		tui.Pages.RemovePage(types.PageConfig)
 		tui.SwitchToPage(types.PageDefault)
 	})
 
@@ -119,6 +118,7 @@ func configPage(tui *types.TUI) *tview.Form {
 
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if eventKey.Key() == tcell.KeyEsc {
+		tui.Pages.RemovePage(types.PageConfig)
 		tui.SwitchToPrevious()
 		return nil
 	}
