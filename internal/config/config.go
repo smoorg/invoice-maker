@@ -1,10 +1,5 @@
 package config
 
-type FontCfg struct {
-	Family   string `yaml:"family"`
-	Style    string `yaml:"style"`
-	Filepath string `yaml:"filepath"`
-}
 
 type Config struct {
 	Issuer           Issuer    `yaml:"issuer"`

@@ -4,7 +4,7 @@ import (
 	"invoice-maker/internal/config"
 	"invoice-maker/internal/gui/modal"
 	"invoice-maker/internal/types"
-	f "invoice-maker/pkg/font"
+	"invoice-maker/pkg/font"
 	"path/filepath"
 
 	"github.com/gdamore/tcell/v2"
@@ -21,7 +21,7 @@ func Render(tui *types.TUI) {
 }
 
 func configPage(tui *types.TUI) *tview.Form {
-	ff, err := f.GetFontFamilies()
+	ff, err := font.GetFontFamilies()
 	if err != nil {
 		return nil
 	}
@@ -35,29 +35,27 @@ func configPage(tui *types.TUI) *tview.Form {
 		if i < 0 || opt == "" {
 			return
 		}
-		tui.Config.Font.Style = opt
+		tui.Config.Font.SetStyle(opt)
 
-		font, err := f.FindFonts(tui.Config.Font.Family, tui.Config.Font.Style)
-		if err != nil {
-			return
+		if font, err := font.FindFonts(tui.Config.Font.Family, tui.Config.Font.Style); err == nil {
+			tui.Config.Font.SetPath(font[0].Filepath)
 		}
-		tui.Config.Font.Filepath = font[0].Filepath
 	}
 
-	page.AddDropDown("Font Family", ff, -1, func(option string, optionIndex int) {
+	setFontFamily := func(option string, optionIndex int) {
 		// do nothing as nothing has been picked. Fixes issue when its triggered before "Font Style" exists in the form.
 		if optionIndex < 0 {
 			return
 		}
-		fonts, err := f.FindFonts(option, "")
+		fonts, err := font.FindFonts(option, "")
 		if err != nil || len(fonts) == 0 {
 			return
 		}
-		tui.Config.Font.Family = fonts[0].Family
+		tui.Config.Font.SetFamily(fonts[0].Family)
 
 		styleDropdown := page.GetFormItem(page.GetFormItemIndex("Font Style"))
 		if len(fonts) > 0 {
-			styles, err := f.GetFontStyles(fonts[0].Family)
+			styles, err := font.GetFontStyles(fonts[0].Family)
 
 			if err != nil {
 				return
@@ -69,8 +67,9 @@ func configPage(tui *types.TUI) *tview.Form {
 				v.SetOptions(styles, setFontStyle)
 			}
 		}
-	})
+	}
 
+	page.AddDropDown("Font Family", ff, -1, setFontFamily)
 	page.AddDropDown("Font Style", []string{}, -1, setFontStyle)
 
 	pickedIndex := -1
@@ -83,7 +82,7 @@ func configPage(tui *types.TUI) *tview.Form {
 	fontFamilyDropdown.(*tview.DropDown).SetCurrentOption(pickedIndex)
 
 	pickedStyle := -1
-	s, err := f.GetFontStyles(tui.Config.Font.Family)
+	s, err := font.GetFontStyles(tui.Config.Font.Family)
 	for i, v := range s {
 		if v == tui.Config.Font.Style {
 			pickedStyle = i
