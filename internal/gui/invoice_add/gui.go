@@ -113,8 +113,8 @@ func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *conf
 	return form
 }
 
-func saveInvoice(tui *types.TUI, data *config.Invoice) {
-	tui.Config.Invoices = append(tui.Config.Invoices, *data)
+func insertInvoice(tui *types.TUI, data *config.Invoice) {
+	tui.Config.AddInvoice(*data)
 	if err := tui.Config.WriteConfig(); err != nil {
 		modal.Error(tui, err.Error(), types.PageConfig, 40, 5, "Error", func() { Render(tui) })
 	}
@@ -122,13 +122,13 @@ func saveInvoice(tui *types.TUI, data *config.Invoice) {
 }
 
 func goBack(tui *types.TUI) {
-	tui.SwitchToPrevious()
+	tui.SwitchToPage(types.PageInvoiceList)
 }
 
 func addInvoice(tui *types.TUI) tview.Primitive {
 	data := &config.Invoice{}
 	return AddOrEditInvoice(tui, data,
-		func(data *config.Invoice) { saveInvoice(tui, data) },
+		func(data *config.Invoice) { insertInvoice(tui, data) },
 		func() { goBack(tui) })
 }
 

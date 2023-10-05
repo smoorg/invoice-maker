@@ -15,7 +15,7 @@ import (
 )
 
 func printInvoice(tui *types.TUI) (string, error) {
-	i := &tui.Config.Invoices[selectedInvoice-1]
+	i := tui.Config.GetInvoice(selectedInvoice-1)
 	dir, err := tui.Config.GetInvoiceDirectory()
 
 	tmpl, err := template.GetTemplate()
