@@ -26,6 +26,7 @@ func configPage(tui *types.TUI) *tview.Form {
 		return nil
 	}
 	page := tview.NewForm()
+	tui.SetDefaultStyle(page.Box)
 
 	page.AddInputField("Invoice Directory", tui.Config.InvoiceDirectory, 80, nil, func(text string) {
 		tui.Config.InvoiceDirectory = filepath.Join(text)

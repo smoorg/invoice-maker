@@ -18,6 +18,7 @@ func AddOrEditReceiver(company *config.Company, title string, save func(), cance
 	form.AddButton("Save", save)
 	form.AddButton("Cancel", cancel)
 
+	tui.SetDefaultStyle(form.Box)
 	form.SetBorder(true)
 
 	form.SetTitle(title)

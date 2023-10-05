@@ -15,6 +15,7 @@ func Render(tui *types.TUI) {
 
 func helpPage(tui *types.TUI) tview.Primitive {
 	t := tview.NewTable()
+	tui.SetDefaultStyle(t.Box)
 
 	t.SetCellSimple(1, 0, "?")
 	t.SetCellSimple(1, 1, " - opens this help dialog")

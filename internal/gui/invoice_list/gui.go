@@ -21,6 +21,7 @@ var selectedInvoice = 1
 
 func invoiceList(tui *types.TUI) tview.Primitive {
 	table := tview.NewTable().SetSelectable(true, false).SetBorders(true)
+	tui.SetDefaultStyle(table.Box)
 
 	table.
 		SetCellSimple(0, 0, "Invoice No.").

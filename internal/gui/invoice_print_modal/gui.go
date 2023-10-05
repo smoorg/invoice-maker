@@ -35,6 +35,7 @@ func Render(tui *types.TUI, filepath string) {
 			}
 
 		})
+	tui.SetDefaultStyle(modal.Box)
 	tui.AddAndSwitchToPage(types.PagePrintModal, modal)
 }
 

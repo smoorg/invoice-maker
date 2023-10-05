@@ -4,6 +4,7 @@ import (
 	"invoice-maker/internal/config"
 
 	"github.com/rivo/tview"
+	"github.com/gdamore/tcell/v2"
 )
 
 const (
@@ -46,6 +47,10 @@ func (tui *TUI) RefreshConfig() {
 func (tui *TUI) SwitchToNext(nextPage string) {
 	tui.PreviousPage = tui.ActivePage
 	tui.ActivePage = nextPage
+}
+
+func (tui *TUI) SetDefaultStyle(t *tview.Box) {
+    t.SetBackgroundColor(tcell.ColorBlack.TrueColor())
 }
 
 func (tui *TUI) SwitchToPrevious() {

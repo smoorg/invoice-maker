@@ -43,6 +43,7 @@ func updateReceiver(tui *types.TUI, data *config.Invoice) int {
 
 func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *config.Invoice), cancel func()) tview.Primitive {
 	form := tview.NewForm()
+	tui.SetDefaultStyle(form.Box)
 
 	receivers := []string{}
 	paymentTypes := []string{"Cash", "Transfer"}

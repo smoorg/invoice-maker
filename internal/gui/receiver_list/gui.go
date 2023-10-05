@@ -20,6 +20,7 @@ func Render(tui *types.TUI) {
 
 func listReceivers(tui *types.TUI) tview.Primitive {
 	table := tview.NewTable().SetSelectable(true, false).SetBorders(true)
+	tui.SetDefaultStyle(table.Box)
 
 	table.SetFixed(0, 2)
 	table.SetCellSimple(0, 0, "Name")

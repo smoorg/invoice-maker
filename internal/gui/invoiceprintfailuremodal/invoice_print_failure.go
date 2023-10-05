@@ -25,7 +25,7 @@ func Render(tui *types.TUI, failureMsg string) {
 				tui.SwitchToPrevious()
 			}
 		})
-
+	tui.SetDefaultStyle(modal.Box)
 	tui.AddAndSwitchToPage(pageName, modal)
 }
 
