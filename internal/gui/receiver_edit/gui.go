@@ -33,7 +33,7 @@ func editReceiver(tui *types.TUI, row int) tview.Primitive {
 		goBack(tui)
 	}
 
-	return receiver_add.AddOrEditReceiver(&r, "Edit Receiver", save, cancel)
+	return receiver_add.AddOrEditReceiver(tui, &r, "Edit Receiver", save, cancel)
 }
 
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {

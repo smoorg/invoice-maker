@@ -9,7 +9,7 @@ import (
 	"github.com/rivo/tview"
 )
 
-func AddOrEditReceiver(company *config.Company, title string, save func(), cancel func()) *tview.Form {
+func AddOrEditReceiver(tui *types.TUI, company *config.Company, title string, save func(), cancel func()) *tview.Form {
 	form := tview.NewForm()
 	form.AddInputField("Name", company.Name, 0, nil, func(text string) { company.Name = text })
 	form.AddInputField("Address", company.Address, 0, nil, func(text string) { company.Address = text })
@@ -50,7 +50,7 @@ func AddReceiver(tui *types.TUI) tview.Primitive {
 		tui.SwitchToPage(types.PageReceiverList)
 	}
 
-	return AddOrEditReceiver(company, "Add Receiver", save, cancel)
+	return AddOrEditReceiver(tui, company, "Add Receiver", save, cancel)
 }
 
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {

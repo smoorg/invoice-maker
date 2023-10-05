@@ -42,13 +42,12 @@ func listReceivers(tui *types.TUI) tview.Primitive {
 	table.SetSelectedFunc(func(row int, column int) {
 		if row > 0 {
 			// we try to ignore table heading row
-			tui.ActivePage = types.PageReceiverEdit
-			receiver_edit.Render(tui, row-1)
+			selectedRow = row-1
 		}
 	})
 
 	table.SetSelectionChangedFunc(func(row int, column int) {
-		selectedRow = row
+		selectedRow = row - 1
 	})
 
 	grid := tview.NewFrame(table).
@@ -67,6 +66,11 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	}
 	if vimkeys.Up(eventKey) {
 		return tcell.NewEventKey(tcell.KeyUp, tcell.RuneUArrow, tcell.ModNone)
+	}
+
+	if vimkeys.Forward(eventKey) {
+		receiver_edit.Render(tui, selectedRow)
+		return nil
 	}
 
 	if eventKey.Rune() == 'd' && selectedRow > 0 {
