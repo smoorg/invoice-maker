@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"invoice-maker/internal/config"
 	"invoice-maker/internal/gui/modal"
+	"invoice-maker/internal/template"
 	"invoice-maker/internal/types"
 	"strconv"
 
@@ -41,7 +42,7 @@ func updateReceiver(tui *types.TUI, data *config.Invoice) int {
 	return pickedReceiver
 }
 
-func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *config.Invoice), cancel func()) tview.Primitive {
+func createForm(tui *types.TUI, data *config.Invoice, formChanged func()) *tview.Form {
 	form := tview.NewForm()
 	tui.SetDefaultStyle(form.Box)
 
@@ -56,17 +57,35 @@ func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *conf
 	pickedReceiver := updateReceiver(tui, data)
 
 	form.
-		AddInputField("Invoice No.", data.InvoiceNo, 50, nil, func(text string) { data.InvoiceNo = text }).
-		AddInputField("Invoice Date", data.InvoiceDate, 50, nil, func(text string) { data.InvoiceDate = text }).
-		AddInputField("Delivery Date", data.DeliveryDate, 50, nil, func(text string) { data.DeliveryDate = text }).
-		AddInputField("Due Date", data.DueDate, 50, nil, func(text string) { data.DueDate = text }).
-		AddDropDown("Receiver", receivers, pickedReceiver, func(option string, optionIndex int) {
-			if optionIndex >= 0 {
-				data.Receiver = tui.Config.Receivers[optionIndex]
-			}
+		AddInputField("Invoice No.", data.InvoiceNo, 50, nil, func(text string) {
+			data.InvoiceNo = text
+			formChanged()
 		}).
+		AddInputField("Invoice Date", data.InvoiceDate, 50, nil,
+			func(text string) {
+				data.InvoiceDate = text
+				formChanged()
+			}).
+		AddInputField("Delivery Date", data.DeliveryDate, 50, nil,
+			func(text string) {
+				data.DeliveryDate = text
+				formChanged()
+			}).
+		AddInputField("Due Date", data.DueDate, 50, nil,
+			func(text string) {
+				data.DueDate = text
+				formChanged()
+			}).
+		AddDropDown("Receiver", receivers, pickedReceiver,
+			func(option string, optionIndex int) {
+				if optionIndex >= 0 {
+					data.Receiver = tui.Config.Receivers[optionIndex]
+				}
+				formChanged()
+			}).
 		AddDropDown("PaymentType", paymentTypes, 0, func(option string, optionIndex int) {
 			data.PaymentType = option
+			formChanged()
 		})
 
 	//TODO: make it possible to have multiple issuer companies to pick
@@ -78,40 +97,78 @@ func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *conf
 
 	// invoice items start
 	form.
-		AddInputField("Unit", data.Items[0].Unit, 50, nil, func(text string) { data.Items[0].Unit = text }).
+		AddInputField("Unit", data.Items[0].Unit, 50, nil, func(text string) {
+			data.Items[0].Unit = text
+			formChanged()
+		}).
 		AddInputField("Price/unit", data.Items[0].Price.String(), 50, nil, func(text string) {
+			decimal.DivisionPrecision = 2
 			if p, err := decimal.NewFromString(text); err == nil {
 				data.Items[0].Price = p
+				formChanged()
 			}
 		}).
 		AddInputField("Quantity", fmt.Sprint(data.Items[0].Quantity), 50, nil, func(text string) {
 			if q, err := strconv.Atoi(text); err == nil {
 				data.Items[0].Quantity = int32(q)
+				formChanged()
 			}
 		}).
 		AddInputField("Vat Rate", fmt.Sprint(data.Items[0].VatRate), 50, nil, func(text string) {
 			if vr, err := strconv.ParseUint(text, 10, 32); err == nil {
 				data.Items[0].VatRate = int32(vr)
+				formChanged()
 			}
 		}).
 		AddInputField("Title", fmt.Sprint(data.Items[0].Title), 50, nil, func(text string) {
 			data.Items[0].Title = text
+			formChanged()
 		})
 
-	// invoice items end
+	form.SetTitle("Add Invoice")
+	if data.Receiver.Name != "" || data.InvoiceNo != "" || data.DueDate != "" || data.InvoiceDate != "" ||
+		data.Issuer.Name != "" {
+		form.SetTitle("Edit Invoice")
+	}
+
+	return form
+}
+
+func renderPreview(tui *types.TUI, data *config.Invoice) *tview.TextView {
+	preview := tview.NewTextView()
+	txt, err := template.GetContent(data)
+	if err != nil {
+		preview.SetText("something went wrong")
+	} else {
+		preview.SetText(txt)
+	}
+
+	return preview
+}
+
+func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *config.Invoice), cancel func()) tview.Primitive {
+	preview := renderPreview(tui, data)
+	changed := func() {
+		defer func() {
+			txt, err := template.GetContent(data)
+			if err == nil {
+				preview.Clear()
+				fmt.Fprint(preview, txt)
+			}
+		}()
+	}
+	form := createForm(tui, data, changed)
 
 	form.AddButton("Save", func() { save(data) }).
 		AddButton("Cancel", cancel).
 		SetBorder(true).
 		SetBorderPadding(1, 1, 1, 1)
 
-	if data.Receiver.Name != "" || data.InvoiceNo != "" || data.DueDate != "" || data.InvoiceDate != "" || data.Issuer.Name != "" {
-		form.SetTitle("Edit Invoice")
-	} else {
-		form.SetTitle("Add Invoice")
-	}
+	g := tview.NewFlex().
+		AddItem(form, 70, 1, true).
+		AddItem(preview, 0, 1, false)
 
-	return form
+	return g
 }
 
 func insertInvoice(tui *types.TUI, data *config.Invoice) {

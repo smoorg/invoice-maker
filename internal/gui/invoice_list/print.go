@@ -15,23 +15,10 @@ import (
 )
 
 func printInvoice(tui *types.TUI) (string, error) {
-	i := tui.Config.GetInvoice(selectedInvoice-1)
 	dir, err := tui.Config.GetInvoiceDirectory()
+	inv := tui.Config.GetInvoice(selectedInvoice-1)
 
-	tmpl, err := template.GetTemplate()
-	if err != nil {
-		return "", errors.New("missing template")
-	}
-
-	rowTemplate, err := template.GetRowTemplate()
-	if err != nil {
-		return "", errors.New("unable to locate row template")
-	}
-
-	inv, err := template.ApplyInvoice(string(tmpl), string(rowTemplate), i)
-	if err != nil {
-		return "", err
-	}
+	invContent, err := template.GetContent(inv)
 
 	fonts, err := font.FindFonts(tui.Config.Font.Family, tui.Config.Font.Style)
 	if err != nil {
@@ -45,14 +32,14 @@ func printInvoice(tui *types.TUI) (string, error) {
 		return "", errors.New(errMsg)
 	}
 
-	htmlBytes, err := template.ToHTML(*inv)
+	htmlBytes, err := template.ToHTML(invContent)
 
 	name := time.Now().Format("2006-01-02 15:04:05")
 	mdName := name + ".md"
 	htmlName := name + ".html"
 	pdfName := name + ".pdf"
 
-	if err := saveFile(dir, mdName, []byte(*inv)); err != nil {
+	if err := saveFile(dir, mdName, []byte(invContent)); err != nil {
 		return "", errors.New("issue while writting markdown file: " + err.Error())
 	}
 	if err := saveFile(dir, htmlName, htmlBytes); err != nil {
@@ -60,7 +47,7 @@ func printInvoice(tui *types.TUI) (string, error) {
 	}
 
 	re := regexp.MustCompile(`<?.pre>`)
-	pdfContent := re.ReplaceAllString(*inv, "")
+	pdfContent := re.ReplaceAllString(invContent, "")
 
 	pdf.InitializePdf("")
 

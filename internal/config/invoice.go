@@ -60,12 +60,14 @@ type InvoiceItem struct {
 }
 
 func (item *Invoice) CalculateInvoice() {
+	decimal.DivisionPrecision = 2
 	for i := range item.Items {
 		item.Items[i].CalculateItemTotal()
 	}
 }
 
 func (i *InvoiceItem) CalculateItemTotal() {
+	decimal.DivisionPrecision = 2
 	i.CalculateAmount()
 	i.CalculateVatAmount()
 
@@ -73,10 +75,12 @@ func (i *InvoiceItem) CalculateItemTotal() {
 }
 
 func (i *InvoiceItem) CalculateAmount() {
+	decimal.DivisionPrecision = 2
 	i.Amount = i.Price.Mul(decimal.NewFromInt32(i.Quantity))
 }
 
 func (i *InvoiceItem) CalculateVatAmount() {
+	decimal.DivisionPrecision = 2
 	i.CalculateAmount()
 	if i.VatRate > 0 {
 		i.VatAmount = i.Amount.Mul(decimal.NewFromInt32(i.VatRate).Div(decimal.NewFromInt32(100)))
