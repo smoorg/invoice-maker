@@ -46,7 +46,7 @@ func TestSumUp(t *testing.T) {
 }
 
 func TestTotal(t *testing.T) {
-	templateStr := "[ Items                                                   ]\n| [ASum] | [TaxSum]| [TotSum]"
+	sut := "[ Items                                                   ]\n| [ASum] | [TaxSum]| [TotSum]"
 	rowStr := "[Qty][Price][Amount][VR][VA][Total]"
 
 	invoice := &config.Invoice{}
@@ -61,13 +61,13 @@ func TestTotal(t *testing.T) {
 		t.Error("invoice items should be greater than 0")
 	}
 
-	sut, err := template.ApplyInvoice(templateStr, rowStr, invoice)
+	err := template.ApplyInvoice(&sut, rowStr, invoice)
 
 	if err != nil {
 		t.Error("should not return error", err)
 	}
 
-	if !strings.Contains(*sut, "| 2000   | 460     | 2460") {
+	if !strings.Contains(sut, "| 2000   | 460     | 2460") {
 		t.Error("Invalid amount sum", sut)
 	}
 }

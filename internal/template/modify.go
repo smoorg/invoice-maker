@@ -26,22 +26,19 @@ func replaceField(result *string, label string, value string) error {
 			continue
 		}
 		submatch := submatches[0]
-
 		offset := utf8.RuneCountInString(submatch) - utf8.RuneCountInString(value)
 
-		var padding string
 
 		// this is when amount of characters for a field value is less than field in the template
 		if offset < 0 {
 			return errors.New(fmt.Sprintf("offset for field '%s' is negative", label))
 		}
 
+		padding := ""
 		if offset > 0 {
 			padding = strings.Repeat(" ", offset)
 		}
-
 		finalLabel := value + padding
-
 		final := strings.ReplaceAll(*result, submatch, finalLabel)
 		*result = final
 	}
@@ -75,16 +72,13 @@ func SumUp(items *[]config.InvoiceItem) (string, string, string) {
 	return amountSum.String(), vatSum.String(), totSum.String()
 }
 
-func ApplyInvoice(templateStr string, rowTemplate string, cfg *config.Invoice) (*string, error) {
-	result := &templateStr
-
+func ApplyInvoice(templateStr *string, rowTemplate string, cfg *config.Invoice) error {
 	amount, tax, total := SumUp(&cfg.Items)
 	if rowTemplate != "" && len(cfg.Items) > 0 {
-		empty := ""
-		var itemsStr *string = &empty
+		itemsStr := ""
 
 		for i := range cfg.Items {
-			*itemsStr += rowTemplate
+			itemsStr += rowTemplate
 			cfg.Items[i].CalculateItemTotal()
 
 			itemFields := &map[string]string{
@@ -99,13 +93,13 @@ func ApplyInvoice(templateStr string, rowTemplate string, cfg *config.Invoice) (
 			}
 
 			for k, v := range *itemFields {
-				if err := replaceField(itemsStr, k, v); err != nil {
-					return result, err
+				if err := replaceField(&itemsStr, k, v); err != nil {
+					return err
 				}
 			}
 
 		}
-		*result = InsertRows(*result, "Items", *itemsStr)
+		*templateStr = InsertRows(*templateStr, "Items", itemsStr)
 
 	}
 	fields := &map[string]string{
@@ -127,11 +121,11 @@ func ApplyInvoice(templateStr string, rowTemplate string, cfg *config.Invoice) (
 		"TotSum":          total,
 	}
 	for k, v := range *fields {
-		if err := replaceField(result, k, v); err != nil {
-			return result, err
+		if err := replaceField(templateStr, k, v); err != nil {
+			return err
 		}
 	}
-	return result, nil
+	return nil
 }
 
 func ToHTML(invoice string) ([]byte, error) {

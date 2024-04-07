@@ -46,9 +46,9 @@ func GetContent(i *config.Invoice) (string, error) {
 		return "", errors.New("unable to locate row template")
 	}
 
-	inv, err := ApplyInvoice(string(tmpl), string(rowTemplate), i)
-	if err != nil {
+	inv := string(tmpl)
+	if err := ApplyInvoice(&inv, string(rowTemplate), i); err != nil {
 		return "", err
 	}
-	return *inv, err
+	return inv, err
 }

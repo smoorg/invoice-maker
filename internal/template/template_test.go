@@ -10,24 +10,24 @@ import (
 )
 
 func TestApplyAddress(t *testing.T) {
-	templateStr := "| [ InvoiceAddress                     ] |"
-	length := len(templateStr)
+	sut := "| [ InvoiceAddress                     ] |"
+	initialLength := len(sut)
 	i := &config.Invoice{}
 	i.Issuer.Address = "ul. Narutowicza 14B/2, 80-501 Gdańsk"
 
-	sut, err := template.ApplyInvoice(templateStr, "", i)
+	err := template.ApplyInvoice(&sut, "", i)
 
 	if err != nil {
 		t.Error("error thrown", err)
 	}
 
-	if length != len(*sut) {
+	if initialLength != len(sut) {
 		t.Error("length mismatch")
 	}
 }
 
 func TestApplyInvoiceRows(t *testing.T) {
-	templateStr := "| [ InvoiceAddress                     ] |\n [ Items ]\n"
+	sut := "| [ InvoiceAddress                     ] |\n [ Items ]\n"
 	i := &config.Invoice{
 		Items: []config.InvoiceItem{
 			{
@@ -50,13 +50,13 @@ func TestApplyInvoiceRows(t *testing.T) {
 
 	rowTemplate := "│ [ Title                ] │ [Qty] │ [Unit]  │ [Price] │ [Amount] │ [VR]  │ [VA   ] │ [Total]  │"
 
-	sut, err := template.ApplyInvoice(templateStr, rowTemplate, i)
+	err := template.ApplyInvoice(&sut, rowTemplate, i)
 
 	if err != nil {
 		t.Error("error thrown", err)
 	}
 
-	lines := strings.Split(*sut, "\n")
+	lines := strings.Split(sut, "\n")
 	if len(lines) > 2 {
 		t.Error("too many lines")
 	}
@@ -64,7 +64,7 @@ func TestApplyInvoiceRows(t *testing.T) {
 }
 
 func TestTotalCalculations(t *testing.T) {
-	templateStr := "| [ IssuerAddress                     ] |\n[ Items                                     ]\n"
+	sut := "| [ IssuerAddress                     ] |\n[ Items                                     ]\n"
 	rowTemplate := "| [ Total                     ] |"
 
 	i := &config.Invoice{}
@@ -78,12 +78,12 @@ func TestTotalCalculations(t *testing.T) {
 
 	i.Items = append(i.Items, item)
 
-	sut, err := template.ApplyInvoice(templateStr, rowTemplate, i)
+	err := template.ApplyInvoice(&sut, rowTemplate, i)
 	if err != nil {
 		t.Error("error thrown", err)
 	}
 
-	if !strings.Contains(*sut, total.String()) {
+	if !strings.Contains(sut, total.String()) {
 		t.Error("total invalid", sut, total)
 	}
 }
