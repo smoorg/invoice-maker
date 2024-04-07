@@ -30,6 +30,22 @@ type Invoice struct {
 	Items []InvoiceItem `yaml:"items"`
 }
 
+const (
+	FieldInvoiceNo    = "Invoice No."
+	FieldInvoiceDate  = "Invoice Date"
+	FieldDeliveryDate = "Delivery Date"
+	FieldDueDate      = "Payout Due Date"
+	FieldPaymentType  = "Payment Type"
+	FieldUnit         = "Unit of Measure"
+	FieldTitle        = "Title"
+	FieldPrice        = "Price / unit"
+	FieldReceiver     = "Receiver"
+	FieldQuantity     = "Quantity"
+	FieldVatRate      = "Vat Rate"
+	FieldAmount       = "Amount"
+	FieldTotal        = "Total"
+)
+
 type InvoiceItem struct {
 	// Name of product or service on the invoice
 	Title string `yaml:"title"`

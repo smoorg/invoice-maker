@@ -33,3 +33,22 @@ func getTemplate(name string) ([]byte, error) {
 
 	return nil, errors.New("no template file found")
 }
+
+
+func GetContent(i *config.Invoice) (string, error) {
+	tmpl, err := GetTemplate()
+	if err != nil {
+		return "", errors.New("missing template")
+	}
+
+	rowTemplate, err := GetRowTemplate()
+	if err != nil {
+		return "", errors.New("unable to locate row template")
+	}
+
+	inv, err := ApplyInvoice(string(tmpl), string(rowTemplate), i)
+	if err != nil {
+		return "", err
+	}
+	return *inv, err
+}

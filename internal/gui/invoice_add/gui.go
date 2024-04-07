@@ -57,33 +57,33 @@ func createForm(tui *types.TUI, data *config.Invoice, formChanged func()) *tview
 	pickedReceiver := updateReceiver(tui, data)
 
 	form.
-		AddInputField("Invoice No.", data.InvoiceNo, 50, nil, func(text string) {
+		AddInputField(config.FieldInvoiceNo, data.InvoiceNo, 50, nil, func(text string) {
 			data.InvoiceNo = text
 			formChanged()
 		}).
-		AddInputField("Invoice Date", data.InvoiceDate, 50, nil,
+		AddInputField(config.FieldInvoiceDate, data.InvoiceDate, 50, nil,
 			func(text string) {
 				data.InvoiceDate = text
 				formChanged()
 			}).
-		AddInputField("Delivery Date", data.DeliveryDate, 50, nil,
+		AddInputField(config.FieldDeliveryDate, data.DeliveryDate, 50, nil,
 			func(text string) {
 				data.DeliveryDate = text
 				formChanged()
 			}).
-		AddInputField("Due Date", data.DueDate, 50, nil,
+		AddInputField(config.FieldDueDate, data.DueDate, 50, nil,
 			func(text string) {
 				data.DueDate = text
 				formChanged()
 			}).
-		AddDropDown("Receiver", receivers, pickedReceiver,
+		AddDropDown(config.FieldReceiver, receivers, pickedReceiver,
 			func(option string, optionIndex int) {
 				if optionIndex >= 0 {
 					data.Receiver = tui.Config.Receivers[optionIndex]
 				}
 				formChanged()
 			}).
-		AddDropDown("PaymentType", paymentTypes, 0, func(option string, optionIndex int) {
+		AddDropDown(config.FieldPaymentType, paymentTypes, 0, func(option string, optionIndex int) {
 			data.PaymentType = option
 			formChanged()
 		})
@@ -97,30 +97,30 @@ func createForm(tui *types.TUI, data *config.Invoice, formChanged func()) *tview
 
 	// invoice items start
 	form.
-		AddInputField("Unit", data.Items[0].Unit, 50, nil, func(text string) {
+		AddInputField(config.FieldUnit, data.Items[0].Unit, 50, nil, func(text string) {
 			data.Items[0].Unit = text
 			formChanged()
 		}).
-		AddInputField("Price/unit", data.Items[0].Price.String(), 50, nil, func(text string) {
+		AddInputField(config.FieldPrice, data.Items[0].Price.String(), 50, nil, func(text string) {
 			decimal.DivisionPrecision = 2
 			if p, err := decimal.NewFromString(text); err == nil {
 				data.Items[0].Price = p
 				formChanged()
 			}
 		}).
-		AddInputField("Quantity", fmt.Sprint(data.Items[0].Quantity), 50, nil, func(text string) {
+		AddInputField(config.FieldQuantity, fmt.Sprint(data.Items[0].Quantity), 50, nil, func(text string) {
 			if q, err := strconv.Atoi(text); err == nil {
 				data.Items[0].Quantity = int32(q)
 				formChanged()
 			}
 		}).
-		AddInputField("Vat Rate", fmt.Sprint(data.Items[0].VatRate), 50, nil, func(text string) {
+		AddInputField(config.FieldVatRate, fmt.Sprint(data.Items[0].VatRate), 50, nil, func(text string) {
 			if vr, err := strconv.ParseUint(text, 10, 32); err == nil {
 				data.Items[0].VatRate = int32(vr)
 				formChanged()
 			}
 		}).
-		AddInputField("Title", fmt.Sprint(data.Items[0].Title), 50, nil, func(text string) {
+		AddInputField(config.FieldTitle, fmt.Sprint(data.Items[0].Title), 50, nil, func(text string) {
 			data.Items[0].Title = text
 			formChanged()
 		})
