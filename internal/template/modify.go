@@ -28,7 +28,6 @@ func replaceField(result *string, label string, value string) error {
 		submatch := submatches[0]
 		offset := utf8.RuneCountInString(submatch) - utf8.RuneCountInString(value)
 
-
 		// this is when amount of characters for a field value is less than field in the template
 		if offset < 0 {
 			return errors.New(fmt.Sprintf("offset for field '%s' is negative", label))
@@ -52,9 +51,11 @@ func InsertRows(t string, label string, value string) string {
 	return re.ReplaceAllString(t, value)
 }
 
-func SumUp(items *[]config.InvoiceItem) (string, string, string) {
+func SumUp(items *[]config.InvoiceItem) (decimal.Decimal, decimal.Decimal, decimal.Decimal) {
 	if len(*items) == 0 {
-		return "0", "0", "0"
+		return decimal.NewFromInt32(0),
+			decimal.NewFromInt32(0),
+			decimal.NewFromInt32(0)
 	}
 
 	amountSum := decimal.NewFromInt32(0)
@@ -69,7 +70,7 @@ func SumUp(items *[]config.InvoiceItem) (string, string, string) {
 		totSum = totSum.Add(item.Total)
 	}
 
-	return amountSum.String(), vatSum.String(), totSum.String()
+	return amountSum, vatSum, totSum
 }
 
 func ApplyInvoice(templateStr *string, rowTemplate string, cfg *config.Invoice) error {
@@ -85,11 +86,11 @@ func ApplyInvoice(templateStr *string, rowTemplate string, cfg *config.Invoice) 
 				"Title":  fmt.Sprint(cfg.Items[i].Title),
 				"Qty":    fmt.Sprint(cfg.Items[i].Quantity),
 				"Unit":   fmt.Sprint(cfg.Items[i].Unit),
-				"Price":  fmt.Sprint(cfg.Items[i].Price.String()),
-				"Amount": fmt.Sprint(cfg.Items[i].Amount.String()),
+				"Price":  fmt.Sprint(cfg.Items[i].Price.StringFixed(2)),
+				"Amount": fmt.Sprint(cfg.Items[i].Amount.StringFixed(2)),
 				"VR":     fmt.Sprintf("%d%%", cfg.Items[i].VatRate),
-				"VA":     fmt.Sprint(cfg.Items[i].VatAmount.String()),
-				"Total":  fmt.Sprint(cfg.Items[i].Total),
+				"VA":     fmt.Sprint(cfg.Items[i].VatAmount.StringFixed(2)),
+				"Total":  fmt.Sprint(cfg.Items[i].Total.StringFixed(2)),
 			}
 
 			for k, v := range *itemFields {
@@ -116,9 +117,9 @@ func ApplyInvoice(templateStr *string, rowTemplate string, cfg *config.Invoice) 
 		"InvoiceNo":       cfg.InvoiceNo,
 		"InvoiceDate":     cfg.InvoiceDate,
 		"DueDate":         cfg.DueDate,
-		"ASum":            amount,
-		"TaxSum":          tax,
-		"TotSum":          total,
+		"ASum":            amount.StringFixed(2),
+		"TaxSum":          tax.StringFixed(2),
+		"TotSum":          total.StringFixed(2),
 	}
 	for k, v := range *fields {
 		if err := replaceField(templateStr, k, v); err != nil {

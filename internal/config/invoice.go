@@ -82,6 +82,12 @@ func (item *Invoice) CalculateInvoice() {
 	}
 }
 
+func (i *Invoice) AddNewItem() int {
+	i.Items = append(i.Items, InvoiceItem{})
+
+	return len(i.Items) - 1
+}
+
 func (i *InvoiceItem) CalculateItemTotal() {
 	decimal.DivisionPrecision = 2
 	i.CalculateAmount()
@@ -101,4 +107,25 @@ func (i *InvoiceItem) CalculateVatAmount() {
 	if i.VatRate > 0 {
 		i.VatAmount = i.Amount.Mul(decimal.NewFromInt32(i.VatRate).Div(decimal.NewFromInt32(100)))
 	}
+}
+
+func (c *Config) AddInvoice(i Invoice) {
+	c.Invoices = append(c.Invoices, i)
+}
+func (c *Config) AddInvoiceItem(index int, i InvoiceItem) int {
+	c.Invoices[index].Items = append(c.Invoices[index].Items, i)
+
+	return len(c.Invoices[index].Items) - 1
+}
+
+func (c *Config) UpdateInvoice(index int, invoice Invoice) {
+	c.Invoices[index] = invoice
+}
+
+func (c *Config) GetInvoice(index int) *Invoice {
+	return &c.Invoices[index]
+}
+
+func (i *Invoice) DeleteInvoiceItem(itemIndex int) {
+	i.Items = append(i.Items[:itemIndex], i.Items[(itemIndex+1):]...)
 }

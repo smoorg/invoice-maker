@@ -90,12 +90,6 @@ func GetConfig() (*Config, error) {
 	return cfg, nil
 }
 
-func (c *Config) ReloadConfig() {
-	if cfg, err := GetConfig(); err == nil {
-		c = cfg
-	}
-}
-
 func (c *Config) WriteConfig() error {
 	cfg, marshalErr := yaml.Marshal(c)
 	if marshalErr != nil {
@@ -116,4 +110,10 @@ func (c *Config) WriteConfig() error {
 func (c *Config) WriteReceiver(receiver Company, row int) {
 	c.Receivers[row] = receiver
 	c.WriteConfig()
+}
+
+func (c *Config) WriteInvoiceItem(item InvoiceItem, invoiceRow int, itemRow int) {
+    c.Invoices[invoiceRow].Items[itemRow] = item
+    c.WriteConfig()
+
 }

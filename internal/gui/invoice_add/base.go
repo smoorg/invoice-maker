@@ -3,14 +3,13 @@ package invoice_add
 import (
 	"fmt"
 	"invoice-maker/internal/config"
+	"invoice-maker/internal/gui/invoice_item_list"
 	"invoice-maker/internal/gui/modal"
 	"invoice-maker/internal/template"
 	"invoice-maker/internal/types"
-	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/shopspring/decimal"
 )
 
 func Render(tui *types.TUI) {
@@ -44,7 +43,6 @@ func updateReceiver(tui *types.TUI, data *config.Invoice) int {
 
 func createForm(tui *types.TUI, data *config.Invoice, formChanged func()) *tview.Form {
 	form := tview.NewForm()
-	tui.SetDefaultStyle(form.Box)
 
 	receivers := []string{}
 	paymentTypes := []string{"Cash", "Transfer"}
@@ -96,34 +94,34 @@ func createForm(tui *types.TUI, data *config.Invoice, formChanged func()) *tview
 	}
 
 	// invoice items start
-	form.
-		AddInputField(config.FieldUnit, data.Items[0].Unit, 50, nil, func(text string) {
-			data.Items[0].Unit = text
-			formChanged()
-		}).
-		AddInputField(config.FieldPrice, data.Items[0].Price.String(), 50, nil, func(text string) {
-			decimal.DivisionPrecision = 2
-			if p, err := decimal.NewFromString(text); err == nil {
-				data.Items[0].Price = p
-				formChanged()
-			}
-		}).
-		AddInputField(config.FieldQuantity, fmt.Sprint(data.Items[0].Quantity), 50, nil, func(text string) {
-			if q, err := strconv.Atoi(text); err == nil {
-				data.Items[0].Quantity = int32(q)
-				formChanged()
-			}
-		}).
-		AddInputField(config.FieldVatRate, fmt.Sprint(data.Items[0].VatRate), 50, nil, func(text string) {
-			if vr, err := strconv.ParseUint(text, 10, 32); err == nil {
-				data.Items[0].VatRate = int32(vr)
-				formChanged()
-			}
-		}).
-		AddInputField(config.FieldTitle, fmt.Sprint(data.Items[0].Title), 50, nil, func(text string) {
-			data.Items[0].Title = text
-			formChanged()
-		})
+	//form.
+	//	AddInputField(config.FieldUnit, data.Items[0].Unit, 50, nil, func(text string) {
+	//		data.Items[0].Unit = text
+	//		formChanged()
+	//	}).
+	//	AddInputField(config.FieldPrice, data.Items[0].Price.String(), 50, nil, func(text string) {
+	//		decimal.DivisionPrecision = 2
+	//		if p, err := decimal.NewFromString(text); err == nil {
+	//			data.Items[0].Price = p
+	//			formChanged()
+	//		}
+	//	}).
+	//	AddInputField(config.FieldQuantity, fmt.Sprint(data.Items[0].Quantity), 50, nil, func(text string) {
+	//		if q, err := strconv.Atoi(text); err == nil {
+	//			data.Items[0].Quantity = int32(q)
+	//			formChanged()
+	//		}
+	//	}).
+	//	AddInputField(config.FieldVatRate, fmt.Sprint(data.Items[0].VatRate), 50, nil, func(text string) {
+	//		if vr, err := strconv.ParseUint(text, 10, 32); err == nil {
+	//			data.Items[0].VatRate = int32(vr)
+	//			formChanged()
+	//		}
+	//	}).
+	//	AddInputField(config.FieldTitle, fmt.Sprint(data.Items[0].Title), 50, nil, func(text string) {
+	//		data.Items[0].Title = text
+	//		formChanged()
+	//	})
 
 	form.SetTitle("Add Invoice")
 	if data.Receiver.Name != "" || data.InvoiceNo != "" || data.DueDate != "" || data.InvoiceDate != "" ||
@@ -138,7 +136,7 @@ func renderPreview(tui *types.TUI, data *config.Invoice) *tview.TextView {
 	preview := tview.NewTextView()
 	txt, err := template.GetContent(data)
 	if err != nil {
-		preview.SetText("something went wrong")
+	    preview.SetText(fmt.Sprintf("something went wrong: %s", err.Error()))
 	} else {
 		preview.SetText(txt)
 	}
@@ -146,8 +144,29 @@ func renderPreview(tui *types.TUI, data *config.Invoice) *tview.TextView {
 	return preview
 }
 
-func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *config.Invoice), cancel func()) tview.Primitive {
+func save(tui *types.TUI, row *int, data *config.Invoice) {
+	if row != nil {
+		// update
+		tui.Config.UpdateInvoice(*row, *data)
+	} else {
+		//insert
+		tui.Config.AddInvoice(*data)
+	}
+
+	if err := tui.Config.WriteConfig(); err != nil {
+		modal.Error(tui, err.Error(), types.PageConfig, 40, 5, "Error", nil)
+	}
+
+	tui.Rerender()
+	goBack(tui)
+}
+
+func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, row *int, cancel func()) tview.Primitive {
+	// preview
 	preview := renderPreview(tui, data)
+	tui.SetDefaultStyle(preview)
+
+	// replaces preview on form edit
 	changed := func() {
 		defer func() {
 			txt, err := template.GetContent(data)
@@ -157,36 +176,65 @@ func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, save func(data *conf
 			}
 		}()
 	}
-	form := createForm(tui, data, changed)
 
-	form.AddButton("Save", func() { save(data) }).
+	////editable invoice items table
+	//it := tview.NewTable().SetSelectable(true, false)
+	//it.SetCellSimple(0, 0, "Id")
+	//it.SetCellSimple(0, 1, "Title")
+	//it.SetCellSimple(0, 2, "Total")
+
+	//for i, v := range data.Items {
+	//	index := i + 1
+	//	it.SetCellSimple(index, 0, fmt.Sprint(index))
+	//	it.SetCellSimple(index, 1, v.Title)
+	//	it.SetCellSimple(index, 2, v.Total.String())
+	//}
+
+	// form
+	form := createForm(tui, data, changed)
+	form.
+		AddButton("Save", func() {
+			save(tui, row, data)
+		}).
 		AddButton("Cancel", cancel).
-		SetBorder(true).
+		AddButton("Next", func() {
+			// HINT: save can happen on item level only
+			save(tui, row, data)
+			invoice_item_list.RenderItemTable(tui, data, row)
+		}).
 		SetBorderPadding(1, 1, 1, 1)
 
-	g := tview.NewFlex().
-		AddItem(form, 70, 1, true).
-		AddItem(preview, 0, 1, false)
+	// footer
+	//footer := tview.NewTextView().SetText(
+	//    ""
+	//)
+
+	// grid
+	// ------
+	// |form | preview
+	// |-----|
+	// |items|
+	g := tview.NewGrid().SetRows(-30).SetColumns(-2, -4)
+
+	g.
+		AddItem(form, 0, 0, 1, 1, 0, 0, true).
+		AddItem(preview, 0, 1, 1, 1, 0, 0, false) //.
+		//AddItem(footer, 1, 0, 1, 2, 0, 0, false)
+
+	//tui.SetDefaultStyle(footer)
+	tui.SetDefaultStyle(form)
 
 	return g
 }
 
-func insertInvoice(tui *types.TUI, data *config.Invoice) {
-	tui.Config.AddInvoice(*data)
-	if err := tui.Config.WriteConfig(); err != nil {
-		modal.Error(tui, err.Error(), types.PageConfig, 40, 5, "Error", func() { Render(tui) })
-	}
-	goBack(tui)
-}
-
 func goBack(tui *types.TUI) {
 	tui.SwitchToPage(types.PageInvoiceList)
+	tui.Pages.RemovePage(types.PageInvoiceAdd)
 }
 
 func addInvoice(tui *types.TUI) tview.Primitive {
 	data := &config.Invoice{}
-	return AddOrEditInvoice(tui, data,
-		func(data *config.Invoice) { insertInvoice(tui, data) },
+	return AddOrEditInvoice(tui, data, nil,
 		func() { goBack(tui) })
 }
 

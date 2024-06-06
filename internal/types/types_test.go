@@ -13,7 +13,7 @@ func TestSwitchToNextPage(t *testing.T) {
 	tui.ActivePage = "active_page"
 	tui.PreviousPage = "inactive_page"
 
-	tui.SwitchToNext("test")
+	tui.SetActivePage("test")
 
 	if tui.ActivePage != "test" {
 		t.Error("switch to next should replace active page")

@@ -6,6 +6,7 @@ import (
 	"invoice-maker/internal/gui/help"
 	"invoice-maker/internal/gui/invoice_add"
 	"invoice-maker/internal/gui/invoice_edit"
+	"invoice-maker/internal/gui/invoice_item_list"
 	"invoice-maker/internal/gui/invoice_list"
 	"invoice-maker/internal/gui/invoice_print_modal"
 	"invoice-maker/internal/gui/invoiceprintfailuremodal"
@@ -92,6 +93,9 @@ func eventHandler(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 		return invoice_add.HandleEvents(eventKey, tui)
 	case types.PageInvoiceEdit:
 		return invoice_edit.HandleEvents(eventKey, tui)
+
+	case types.PageInvoiceItemList:
+		return invoice_item_list.HandleEvents(eventKey, tui)
 
 	case types.PageConfig:
 		return config_page.HandleEvents(eventKey, tui)

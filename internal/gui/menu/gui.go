@@ -15,7 +15,6 @@ func Render(tui *types.TUI) {
 
 func MenuPage(tui *types.TUI) *tview.List {
 	page := tview.NewList()
-	tui.SetDefaultStyle(page.Box)
 
 	page.AddItem("Invoices", "List, add and modify invoices", 'i',
 		func() { tui.SwitchToPage(types.PageInvoiceList) })

@@ -101,7 +101,7 @@ func configPage(tui *types.TUI) *tview.Form {
 		if valid := config.IsValidInvoiceDirectory(tui.Config.InvoiceDirectory); valid == false {
 			msg := "Invoice directory provided is not a valid directory or no privileges to modify it. Please modify it accordingly and ensure its absolute path."
 			modal.Error(tui, msg, types.PageConfig, 40, 5, "Error", func() {
-				tui.Config.ReloadConfig()
+				tui.RefreshConfig()
 				tui.Rerender()
 			})
 			return

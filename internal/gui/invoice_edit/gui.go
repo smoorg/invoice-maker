@@ -20,7 +20,7 @@ func Render(tui *types.TUI, row int) {
 func updateInvoice(tui *types.TUI, row int, data *config.Invoice) {
 	tui.Config.UpdateInvoice(row, *data)
 	if err := tui.Config.WriteConfig(); err != nil {
-		modal.Error(tui, err.Error(), types.PageConfig, 40, 5, "Error", func() { Render(tui, row) })
+		modal.Error(tui, err.Error(), types.PageConfig, 40, 5, "Error", func() { Render(tui, row-1) })
 	}
 	tui.Rerender()
 	goBack(tui)
@@ -28,14 +28,14 @@ func updateInvoice(tui *types.TUI, row int, data *config.Invoice) {
 
 func goBack(tui *types.TUI) {
 	tui.SwitchToPage(types.PageInvoiceList)
-	tui.Pages.RemovePage(types.PageInvoiceAdd)
+	tui.Pages.RemovePage(types.PageInvoiceEdit)
 }
 
 func editInvoice(tui *types.TUI, row int) tview.Primitive {
 	return invoice_add.AddOrEditInvoice(
 		tui,
 		tui.Config.GetInvoice(row),
-		func(data *config.Invoice) { updateInvoice(tui, row, data) },
+		&row,
 		func() { goBack(tui) },
 	)
 }

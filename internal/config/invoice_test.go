@@ -73,3 +73,29 @@ func TestCalculateTotal(t *testing.T) {
 		t.Error(inv.Items[0].Amount, "should be 20")
 	}
 }
+
+func TestAddInvoiceItem(t *testing.T) {
+    inv := &config.Invoice{}
+    inv.AddNewItem()
+
+    if len(inv.Items) != 1 {
+	t.Fatal("item was not added properly")
+    }
+}
+
+func TestDeleteInvoiceItem(t *testing.T) {
+    inv := &config.Invoice{
+	Items: []config.InvoiceItem{
+	    {Title: "abc"},
+	},
+    }
+
+    if len(inv.Items) != 1 {
+	t.Fatal("item was not added properly")
+    }
+
+    inv.DeleteInvoiceItem(0)
+    if len(inv.Items) != 0 {
+	t.Fatal("item was not deleted properly")
+    }
+}

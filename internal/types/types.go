@@ -15,6 +15,8 @@ const (
 	PageInvoiceAdd  string = "invoice_add"
 	PageInvoiceEdit string = "invoice_edit"
 	PageInvoiceList string = "invoice_list"
+	PageInvoiceItemList string = "invoice_item_list"
+	PageInvoiceItemEdit string = "invoice_item_edit"
 
 	PageReceiverAdd  string = "receiver_add"
 	PageReceiverEdit string = "receiver_edit"
@@ -44,12 +46,16 @@ func (tui *TUI) RefreshConfig() {
 	tui.Config = cfg
 }
 
-func (tui *TUI) SwitchToNext(nextPage string) {
+func (tui *TUI) SetActivePage(nextPage string) {
 	tui.PreviousPage = tui.ActivePage
 	tui.ActivePage = nextPage
 }
 
-func (tui *TUI) SetDefaultStyle(t *tview.Box) {
+type Background interface {
+    SetBackgroundColor(color tcell.Color) *tview.Box
+}
+
+func (tui *TUI) SetDefaultStyle(t Background) {
     t.SetBackgroundColor(tcell.ColorBlack.TrueColor())
 }
 
@@ -59,14 +65,14 @@ func (tui *TUI) SwitchToPrevious() {
 
 func (tui *TUI) SwitchToPage(page string) {
 	tui.RefreshConfig()
-	tui.SwitchToNext(page)
+	tui.SetActivePage(page)
 	tui.Rerender()
 	tui.Pages.SwitchToPage(page)
 }
 
 func (tui *TUI) AddAndSwitchToPage(page string, item tview.Primitive) {
 	tui.RefreshConfig()
-	tui.SwitchToNext(page)
+	tui.SetActivePage(page)
 
 	tui.Pages.AddPage(page, item, true, true)
 
