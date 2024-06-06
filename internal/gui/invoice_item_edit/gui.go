@@ -12,24 +12,15 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func Render(tui *types.TUI, invoice *config.Invoice, invoiceIndex *int, itemIndex *int, postsave func()) {
+func Render(tui *types.TUI, invoice *config.InvoiceItem, postsave func()) {
 	tui.AddAndSwitchToPage(types.PageInvoiceItemEdit,
 		modal.Modal(tui, types.PageInvoiceItemEdit, types.PageInvoiceItemList,
-			renderItem(tui, invoice, invoiceIndex, itemIndex, postsave),
+			renderItem(tui, invoice, postsave),
 			80, 16, "Edit Invoice Item"),
 	)
 }
 
-func renderItem(tui *types.TUI, invoice *config.Invoice, invoiceIndex *int, invoiceItemIndex *int, postsave func()) tview.Primitive {
-    var item config.InvoiceItem
-    if invoiceItemIndex == nil {
-	index := invoice.AddNewItem()
-	item = invoice.Items[index]
-	invoiceItemIndex = &index
-    } else {
-	item = invoice.Items[*invoiceItemIndex]
-    }
-
+func renderItem(tui *types.TUI, item *config.InvoiceItem, postsave func()) tview.Primitive {
 	i := tview.NewForm().
 		AddInputField(config.FieldTitle, item.Title, 20, nil, func(text string) {
 			item.Title = text
@@ -53,11 +44,6 @@ func renderItem(tui *types.TUI, invoice *config.Invoice, invoiceIndex *int, invo
 			}
 		}).
 		AddButton("Save", func() {
-			//TODO: check error
-			if invoiceIndex == nil {
-			    panic("invoiceIndex nil")
-			}
-			tui.Config.WriteInvoiceItem(item, *invoiceIndex, *invoiceItemIndex)
 			tui.Pages.RemovePage(types.PageInvoiceItemEdit)
 			tui.SetActivePage(types.PageInvoiceItemList)
 			postsave()

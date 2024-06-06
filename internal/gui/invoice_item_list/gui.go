@@ -72,10 +72,15 @@ func invoiceItemList(tui *types.TUI, invoice *config.Invoice, invoiceRow *int) t
 }
 
 func selectItem(tui *types.TUI, invoice *config.Invoice, invoiceRow *int, itemRow int) {
-    if invoiceRow == nil { panic("invoiceRow nil")}
+	if invoiceRow == nil {
+		panic("invoiceRow nil")
+	}
+	item := invoice.Items[itemRow]
+
 	tui.RefreshConfig()
 	tui.Pages.RemovePage(types.PageInvoiceItemList)
-	invoice_item_edit.Render(tui, invoice, invoiceRow, &itemRow, func() {
+	invoice_item_edit.Render(tui, &item, func() {
+		tui.Config.WriteInvoiceItem(item, *invoiceRow, itemRow)
 		tui.RefreshConfig()
 		RenderItemTable(tui, tui.Config.GetInvoice(*invoiceRow), invoiceRow)
 	})
