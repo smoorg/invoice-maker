@@ -29,7 +29,8 @@ func invoiceList(tui *types.TUI) tview.Primitive {
 		SetCellSimple(0, 2, "DueDate").
 		SetCellSimple(0, 3, "Receiver").
 		SetCellSimple(0, 4, "Issuer").
-		SetCellSimple(0, 5, "PaymentType")
+		SetCellSimple(0, 5, "PaymentType").
+		SetCellSimple(0, 6, "Net Sum")
 
 	for i, invoice := range tui.Config.Invoices {
 		table.
@@ -38,7 +39,8 @@ func invoiceList(tui *types.TUI) tview.Primitive {
 			SetCellSimple(i+1, 2, invoice.DueDate).
 			SetCellSimple(i+1, 3, invoice.Receiver.Name).
 			SetCellSimple(i+1, 4, invoice.Issuer.Name).
-			SetCellSimple(i+1, 5, invoice.PaymentType)
+			SetCellSimple(i+1, 5, invoice.PaymentType).
+			SetCellSimple(i+1, 6, invoice.NetSum())
 	}
 
 	table.Select(selectedInvoice, 0)

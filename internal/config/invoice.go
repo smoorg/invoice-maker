@@ -129,3 +129,12 @@ func (c *Config) GetInvoice(index int) *Invoice {
 func (i *Invoice) DeleteInvoiceItem(itemIndex int) {
 	i.Items = append(i.Items[:itemIndex], i.Items[(itemIndex+1):]...)
 }
+
+func (i *Invoice) NetSum() string {
+    amount := decimal.NewFromInt(0)
+    for _,v := range i.Items {
+	amount = amount.Add(v.Total)
+    }
+
+    return amount.StringFixed(2)
+}
