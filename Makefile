@@ -1,17 +1,16 @@
-SRC=src/
 PKG=pkg/
 BIN=bin/invoice-maker
  
 build:
 	# added .. as BIN would be created in src/bin otherwise
-	go build -o ../$(BIN) --pkgdir $(PKG) -C $(SRC) main.go
+	go build -o $(BIN) --pkgdir $(PKG) main.go
  
 run:
-	cd $(SRC) && go run .
+	go run .
 
 test:
-	go test -C $(SRC) ./...
+	go test ./...
 
 clean:
-	cd ${SRC} && go clean
-	rm -f ./${BIN}
+	go clean
+	rm ./${BIN}
