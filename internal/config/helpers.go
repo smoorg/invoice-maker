@@ -18,13 +18,7 @@ const APP_CONFIG_FOLDER_NAME = "invoice-maker"
 func GetConfigDir() (string, error) {
 	configDir, err := os.UserConfigDir()
 	if err != nil {
-		msg := fmt.Sprintf(
-			"user config directory at '%s' missing, falling back to '%s' default package config",
-			configDir,
-			"/etc/"+APP_CONFIG_FOLDER_NAME,
-		)
-
-		return filepath.Join("/etc", APP_CONFIG_FOLDER_NAME), errors.New(msg)
+		return filepath.Join("/etc", APP_CONFIG_FOLDER_NAME), nil
 	}
 
 	return filepath.Join(configDir, APP_CONFIG_FOLDER_NAME), nil
