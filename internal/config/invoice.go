@@ -138,3 +138,7 @@ func (i *Invoice) NetSum() string {
 
     return amount.StringFixed(2)
 }
+
+func (c *Config) RemoveInvoice(index int) {
+	c.Invoices = append(c.Invoices[:index], c.Invoices[index+1:]...)
+}

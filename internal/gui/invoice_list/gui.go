@@ -81,6 +81,12 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 		return tcell.NewEventKey(tcell.KeyEnter, rune(tcell.KeyEnter), tcell.ModNone)
 	}
 
+	if eventKey.Rune() == 'd' {
+		tui.Config.RemoveInvoice(selectedInvoice-1)
+		tui.Config.WriteConfig()
+		tui.Rerender()
+	}
+
 	if eventKey.Rune() == 'a' {
 		invoice_add.Render(tui)
 		return nil
