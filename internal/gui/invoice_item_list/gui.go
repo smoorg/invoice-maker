@@ -24,7 +24,8 @@ var invoiceIndex = 0
 
 func invoiceItemList(tui *types.TUI, invoice *config.Invoice, invoiceRow *int) tview.Primitive {
 	if invoiceRow == nil {
-		panic("invoiceRow nil")
+		lastItem := len(tui.Config.Invoices) - 1
+		invoiceRow = &lastItem
 	}
 	invoiceIndex = *invoiceRow
 	table := tview.NewTable().SetSelectable(true, false).SetBorders(true)
@@ -72,10 +73,13 @@ func invoiceItemList(tui *types.TUI, invoice *config.Invoice, invoiceRow *int) t
 }
 
 func selectItem(tui *types.TUI, invoice *config.Invoice, invoiceRow *int, itemRow int) {
-    if invoiceRow == nil { panic("invoiceRow nil")}
+	if invoiceRow == nil {
+		panic("invoiceRow nil")
+	}
 	tui.RefreshConfig()
 	tui.Pages.RemovePage(types.PageInvoiceItemList)
 	invoice_item_edit.Render(tui, invoice, invoiceRow, &itemRow, func() {
+		tui.Config.WriteConfig()
 		tui.RefreshConfig()
 		RenderItemTable(tui, tui.Config.GetInvoice(*invoiceRow), invoiceRow)
 	})
@@ -84,6 +88,7 @@ func selectItem(tui *types.TUI, invoice *config.Invoice, invoiceRow *int, itemRo
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	if eventKey.Key() == tcell.KeyEsc || eventKey.Rune() == 'h' {
 		tui.Pages.RemovePage(types.PageInvoiceItemList)
+		tui.RefreshConfig()
 		tui.SwitchToPage(types.PageInvoiceList)
 	}
 
@@ -96,6 +101,7 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 		i := invoice.AddNewItem()
 		tui.Config.WriteConfig()
 		selectItem(tui, tui.Config.GetInvoice(invoiceIndex), &selectedInvoiceItem, i)
+		tui.Config.WriteConfig()
 		//selectItem(tui, tui.Config.GetInvoice(invoiceIndex), selectedInvoiceItem, newItemIndex)
 	}
 
