@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"invoice-maker/internal/config"
 	"invoice-maker/internal/gui/config_page"
 	"invoice-maker/internal/gui/help"
 	"invoice-maker/internal/gui/invoice_add"
@@ -13,11 +12,13 @@ import (
 	"invoice-maker/internal/gui/issuer_edit"
 	"invoice-maker/internal/gui/menu"
 	"invoice-maker/internal/gui/modal"
-
 	"invoice-maker/internal/gui/receiver_add"
 	"invoice-maker/internal/gui/receiver_edit"
 	"invoice-maker/internal/gui/receiver_list"
+
 	"invoice-maker/internal/types"
+
+	"invoice-maker/pkg/config"
 
 	"github.com/gdamore/tcell/v2"
 )

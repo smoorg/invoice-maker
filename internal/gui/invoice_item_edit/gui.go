@@ -2,10 +2,12 @@ package invoice_item_edit
 
 import (
 	"fmt"
-	"invoice-maker/internal/config"
+	"strconv"
+
 	"invoice-maker/internal/gui/modal"
 	"invoice-maker/internal/types"
-	"strconv"
+
+	"invoice-maker/pkg/config"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -21,14 +23,14 @@ func Render(tui *types.TUI, invoice *config.Invoice, invoiceIndex *int, itemInde
 }
 
 func renderItem(tui *types.TUI, invoice *config.Invoice, invoiceIndex *int, invoiceItemIndex *int, postsave func()) tview.Primitive {
-    var item config.InvoiceItem
-    if invoiceItemIndex == nil {
-	index := invoice.AddNewItem()
-	item = invoice.Items[index]
-	invoiceItemIndex = &index
-    } else {
-	item = invoice.Items[*invoiceItemIndex]
-    }
+	var item config.InvoiceItem
+	if invoiceItemIndex == nil {
+		index := invoice.AddNewItem()
+		item = invoice.Items[index]
+		invoiceItemIndex = &index
+	} else {
+		item = invoice.Items[*invoiceItemIndex]
+	}
 
 	i := tview.NewForm().
 		AddInputField(config.FieldTitle, item.Title, 20, nil, func(text string) {
@@ -55,7 +57,7 @@ func renderItem(tui *types.TUI, invoice *config.Invoice, invoiceIndex *int, invo
 		AddButton("Save", func() {
 			//TODO: check error
 			if invoiceIndex == nil {
-			    panic("invoiceIndex nil")
+				panic("invoiceIndex nil")
 			}
 			tui.Config.WriteInvoiceItem(item, *invoiceIndex, *invoiceItemIndex)
 			tui.Pages.RemovePage(types.PageInvoiceItemEdit)

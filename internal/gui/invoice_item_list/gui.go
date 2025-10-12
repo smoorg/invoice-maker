@@ -2,10 +2,11 @@ package invoice_item_list
 
 import (
 	"fmt"
-	"invoice-maker/internal/config"
 	"invoice-maker/internal/gui/invoice_item_edit"
 	"invoice-maker/internal/types"
 	"invoice-maker/internal/vimkeys"
+
+	"invoice-maker/pkg/config"
 
 	//"github.com/gdamore/tcell/v2"
 	"github.com/gdamore/tcell/v2"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"invoice-maker/internal/config"
+	"invoice-maker/pkg/config"
 
 	"github.com/shopspring/decimal"
 )

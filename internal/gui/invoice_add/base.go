@@ -2,11 +2,12 @@ package invoice_add
 
 import (
 	"fmt"
-	"invoice-maker/internal/config"
 	"invoice-maker/internal/gui/invoice_item_list"
 	"invoice-maker/internal/gui/modal"
-	"invoice-maker/internal/template"
 	"invoice-maker/internal/types"
+
+	"invoice-maker/pkg/config"
+	"invoice-maker/pkg/template"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -136,7 +137,7 @@ func renderPreview(tui *types.TUI, data *config.Invoice) *tview.TextView {
 	preview := tview.NewTextView()
 	txt, err := template.GetContent(data)
 	if err != nil {
-	    preview.SetText(fmt.Sprintf("something went wrong: %s", err.Error()))
+		preview.SetText(fmt.Sprintf("something went wrong: %s", err.Error()))
 	} else {
 		preview.SetText(txt)
 	}

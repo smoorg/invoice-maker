@@ -82,7 +82,7 @@ func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
 	}
 
 	if eventKey.Rune() == 'd' {
-		tui.Config.RemoveInvoice(selectedInvoice-1)
+		tui.Config.RemoveInvoice(selectedInvoice - 1)
 		tui.Config.WriteConfig()
 		tui.Rerender()
 	}

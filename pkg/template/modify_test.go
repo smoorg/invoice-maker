@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"invoice-maker/internal/config"
-	"invoice-maker/internal/template"
+	"invoice-maker/pkg/config"
+	"invoice-maker/pkg/template"
 
 	"github.com/shopspring/decimal"
 )

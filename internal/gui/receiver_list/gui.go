@@ -1,12 +1,13 @@
 package receiver_list
 
 import (
-	"invoice-maker/internal/config"
 	"invoice-maker/internal/gui/modal"
 	"invoice-maker/internal/gui/receiver_add"
 	"invoice-maker/internal/gui/receiver_edit"
 	"invoice-maker/internal/types"
 	"invoice-maker/internal/vimkeys"
+
+	"invoice-maker/pkg/config"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -42,7 +43,7 @@ func listReceivers(tui *types.TUI) tview.Primitive {
 	table.SetSelectedFunc(func(row int, column int) {
 		if row > 0 {
 			// we try to ignore table heading row
-			selectedRow = row-1
+			selectedRow = row - 1
 		}
 	})
 

@@ -3,10 +3,10 @@ package invoice_list
 import (
 	"errors"
 	"fmt"
-	"invoice-maker/internal/pdf"
-	"invoice-maker/internal/template"
 	"invoice-maker/internal/types"
 	"invoice-maker/pkg/font"
+	"invoice-maker/pkg/pdf"
+	"invoice-maker/pkg/template"
 	"log"
 	"os"
 	"path/filepath"
@@ -16,7 +16,7 @@ import (
 
 func printInvoice(tui *types.TUI) (string, error) {
 	dir, err := tui.Config.GetInvoiceDirectory()
-	inv := tui.Config.GetInvoice(selectedInvoice-1)
+	inv := tui.Config.GetInvoice(selectedInvoice - 1)
 
 	invContent, err := template.GetContent(inv)
 

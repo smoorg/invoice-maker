@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"invoice-maker/internal/config"
+	"invoice-maker/pkg/config"
 )
 
 type String string

@@ -1,7 +1,7 @@
 package menu
 
 import (
-	config_page "invoice-maker/internal/gui/config_page"
+	"invoice-maker/internal/gui/config_page"
 	"invoice-maker/internal/gui/help"
 	"invoice-maker/internal/types"
 
@@ -35,7 +35,7 @@ func MenuPage(tui *types.TUI) *tview.List {
 			help.Render(tui)
 		})
 
-		tui.SetDefaultStyle(page.Box)
+	tui.SetDefaultStyle(page.Box)
 
 	return page
 }

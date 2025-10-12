@@ -1,9 +1,10 @@
 package receiver_add
 
 import (
-	"invoice-maker/internal/config"
 	"invoice-maker/internal/gui/modal"
 	"invoice-maker/internal/types"
+
+	"invoice-maker/pkg/config"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"

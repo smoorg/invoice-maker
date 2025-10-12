@@ -1,7 +1,7 @@
 package types
 
 import (
-	"invoice-maker/internal/config"
+	"invoice-maker/pkg/config"
 
 	"github.com/rivo/tview"
 	"github.com/gdamore/tcell/v2"

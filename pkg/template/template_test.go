@@ -1,8 +1,8 @@
 package template_test
 
 import (
-	"invoice-maker/internal/config"
-	"invoice-maker/internal/template"
+	"invoice-maker/pkg/config"
+	"invoice-maker/pkg/template"
 	"strings"
 	"testing"
 

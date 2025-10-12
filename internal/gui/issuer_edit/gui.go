@@ -37,7 +37,7 @@ func EditIssuer(tui *types.TUI) *tview.Form {
 		AddButton("Cancel", func() {
 			goBack(tui)
 		})
-		tui.SetDefaultStyle(issuerForm.Box)
+	tui.SetDefaultStyle(issuerForm.Box)
 
 	issuerForm.SetTitle("Issuer details").SetBorder(true)
 	issuerForm.SetBorder(true)

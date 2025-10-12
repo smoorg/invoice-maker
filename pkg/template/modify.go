@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"invoice-maker/internal/config"
+	"invoice-maker/pkg/config"
 
 	"github.com/gomarkdown/markdown"
 	"github.com/shopspring/decimal"

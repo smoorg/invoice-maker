@@ -1,11 +1,13 @@
 package config_page
 
 import (
-	"invoice-maker/internal/config"
+	"path/filepath"
+
 	"invoice-maker/internal/gui/modal"
 	"invoice-maker/internal/types"
+
+	"invoice-maker/pkg/config"
 	"invoice-maker/pkg/font"
-	"path/filepath"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
