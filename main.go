@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 
 	"github.com/rivo/tview"
@@ -11,8 +10,6 @@ import (
 )
 
 var tui *types.TUI
-
-var configDir = flag.String("config-dir", "", "config directory")
 
 func main() {
 	tui = &types.TUI{}

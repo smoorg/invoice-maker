@@ -95,9 +95,11 @@ func (c *Config) WriteConfig() error {
 		return errors.New("Unable to save config file")
 	}
 
-	if conf, err := GetConfig(); err == nil {
-		c = conf
+	conf, err := GetConfig()
+	if err != nil {
+		return errors.New("Unable to get config file")
 	}
+	c = conf
 	return nil
 }
 
@@ -107,7 +109,7 @@ func (c *Config) WriteReceiver(receiver Company, row int) {
 }
 
 func (c *Config) WriteInvoiceItem(item InvoiceItem, invoiceRow int, itemRow int) {
-    c.Invoices[invoiceRow].Items[itemRow] = item
-    c.WriteConfig()
+	c.Invoices[invoiceRow].Items[itemRow] = item
+	c.WriteConfig()
 
 }

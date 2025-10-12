@@ -81,14 +81,14 @@ func selectItem(tui *types.TUI, invoice *config.Invoice, invoiceRow *int, itemRo
 	invoice_item_edit.Render(tui, invoice, invoiceRow, &itemRow, func() {
 		tui.Config.WriteConfig()
 		tui.RefreshConfig()
+		tui.Rerender()
 		RenderItemTable(tui, tui.Config.GetInvoice(*invoiceRow), invoiceRow)
 	})
 }
 
 func HandleEvents(eventKey *tcell.EventKey, tui *types.TUI) *tcell.EventKey {
-	if eventKey.Key() == tcell.KeyEsc || eventKey.Rune() == 'h' {
+	if vimkeys.Back(eventKey) {
 		tui.Pages.RemovePage(types.PageInvoiceItemList)
-		tui.RefreshConfig()
 		tui.SwitchToPage(types.PageInvoiceList)
 	}
 

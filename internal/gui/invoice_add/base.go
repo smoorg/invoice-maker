@@ -156,9 +156,6 @@ func save(tui *types.TUI, row *int, data *config.Invoice) {
 	if err := tui.Config.WriteConfig(); err != nil {
 		modal.Error(tui, err.Error(), types.PageConfig, 40, 5, "Error", nil)
 	}
-
-	tui.Rerender()
-	goBack(tui)
 }
 
 func AddOrEditInvoice(tui *types.TUI, data *config.Invoice, row *int, cancel func()) tview.Primitive {
