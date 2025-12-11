@@ -5,7 +5,7 @@ import (
 	"invoice-maker/internal/gui/receiver_add"
 	"invoice-maker/internal/gui/receiver_edit"
 	"invoice-maker/internal/types"
-	"invoice-maker/internal/vimkeys"
+	"invoice-maker/pkg/vimkeys"
 
 	"invoice-maker/pkg/config"
 

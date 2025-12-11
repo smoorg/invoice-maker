@@ -2,7 +2,7 @@ package modal
 
 import (
 	"invoice-maker/internal/types"
-	"invoice-maker/internal/vimkeys"
+	"invoice-maker/pkg/vimkeys"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"

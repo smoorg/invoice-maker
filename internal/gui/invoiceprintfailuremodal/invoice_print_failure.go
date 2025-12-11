@@ -3,7 +3,7 @@ package invoiceprintfailuremodal
 import (
 	"fmt"
 	"invoice-maker/internal/types"
-	"invoice-maker/internal/vimkeys"
+	"invoice-maker/pkg/vimkeys"
 
 	tcell "github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"

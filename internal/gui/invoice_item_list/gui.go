@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"invoice-maker/internal/gui/invoice_item_edit"
 	"invoice-maker/internal/types"
-	"invoice-maker/internal/vimkeys"
+	"invoice-maker/pkg/vimkeys"
 
 	"invoice-maker/pkg/config"
 

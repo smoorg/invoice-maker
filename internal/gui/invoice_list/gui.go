@@ -6,7 +6,7 @@ import (
 	"invoice-maker/internal/gui/invoice_print_modal"
 	"invoice-maker/internal/gui/invoiceprintfailuremodal"
 	"invoice-maker/internal/types"
-	"invoice-maker/internal/vimkeys"
+	"invoice-maker/pkg/vimkeys"
 	"log"
 
 	tcell "github.com/gdamore/tcell/v2"
