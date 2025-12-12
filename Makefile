@@ -6,7 +6,7 @@ build:
 	go build -o $(BIN) --pkgdir $(PKG) main.go
  
 run:
-	go run .
+	go run cmd/v2/main.go
 
 test:
 	go test ./...
