@@ -43,6 +43,7 @@ require (
 )
 
 require (
+	github.com/76creates/stickers v1.5.0
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.6.0

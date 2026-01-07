@@ -51,7 +51,7 @@ type InvoiceItem struct {
 	Title string `yaml:"title"`
 
 	// Price per good.
-	Price decimal.Decimal `yaml:"price"`
+	Price string `yaml:"price"`
 
 	// Number of units sold. In case of service that's usually set to 1.
 	Quantity int32 `yaml:"quantity"`
@@ -66,13 +66,7 @@ type InvoiceItem struct {
 	VatRate int32 `yaml:"vatRate"`
 
 	// Net amount from which taxes are deducted. Calculated based on Price * Qty.
-	Amount decimal.Decimal `yaml:"amount"`
-
-	// Vat amount to be added to `Total`. Calculated based on `VatRate * Price / 100`.
-	VatAmount decimal.Decimal
-
-	// Total calculated by Amount + VatAmount
-	Total decimal.Decimal
+	Amount string `yaml:"amount"`
 }
 
 func (item *Invoice) CalculateInvoice() {
@@ -88,25 +82,33 @@ func (i *Invoice) AddNewItem() int {
 	return len(i.Items) - 1
 }
 
-func (i *InvoiceItem) CalculateItemTotal() {
+func (i *InvoiceItem) CalculateItemTotal() decimal.Decimal {
 	decimal.DivisionPrecision = 2
-	i.CalculateAmount()
-	i.CalculateVatAmount()
+	amount := i.CalculateAmount()
+	vat := i.CalculateVatAmount()
 
-	i.Total = i.Amount.Add(i.VatAmount)
+	return amount.Add(vat)
 }
 
-func (i *InvoiceItem) CalculateAmount() {
+func (i *InvoiceItem) CalculateAmount() decimal.Decimal {
 	decimal.DivisionPrecision = 2
-	i.Amount = i.Price.Mul(decimal.NewFromInt32(i.Quantity))
-}
-
-func (i *InvoiceItem) CalculateVatAmount() {
-	decimal.DivisionPrecision = 2
-	i.CalculateAmount()
-	if i.VatRate > 0 {
-		i.VatAmount = i.Amount.Mul(decimal.NewFromInt32(i.VatRate).Div(decimal.NewFromInt32(100)))
+	price, err := decimal.NewFromString(i.Price)
+	if err != nil {
+		panic(err)
 	}
+	result := price.Mul(decimal.NewFromInt32(i.Quantity))
+	i.Amount = result.StringFixed(2)
+
+	return result
+}
+
+func (i *InvoiceItem) CalculateVatAmount() decimal.Decimal {
+	decimal.DivisionPrecision = 2
+	if i.VatRate > 0 {
+		amount := i.CalculateAmount()
+		return amount.Mul(decimal.NewFromInt32(i.VatRate).Div(decimal.NewFromInt32(100)))
+	}
+	return decimal.NewFromInt32(0)
 }
 
 func (c *Config) AddInvoice(i Invoice) {
@@ -131,12 +133,21 @@ func (i *Invoice) DeleteInvoiceItem(itemIndex int) {
 }
 
 func (i *Invoice) NetSum() string {
-    amount := decimal.NewFromInt(0)
-    for _,v := range i.Items {
-	amount = amount.Add(v.Total)
-    }
+	amount := decimal.NewFromInt(0)
+	for _, v := range i.Items {
+		amount = amount.Add(v.CalculateAmount())
+	}
 
-    return amount.StringFixed(2)
+	return amount.StringFixed(2)
+}
+
+func (i *Invoice) GrossSum() string {
+	amount := decimal.NewFromInt(0)
+	for _, v := range i.Items {
+		amount = amount.Add(v.CalculateItemTotal())
+	}
+
+	return amount.StringFixed(2)
 }
 
 func (c *Config) RemoveInvoice(index int) {

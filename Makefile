@@ -3,7 +3,7 @@ BIN=bin/invoice-maker
  
 build:
 	# added .. as BIN would be created in src/bin otherwise
-	go build -o $(BIN) --pkgdir $(PKG) main.go
+	go build -o $(BIN) --pkgdir $(PKG) cmd/v2/main.go
  
 run:
 	go run cmd/v2/main.go

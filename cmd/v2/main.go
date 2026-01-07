@@ -3,11 +3,19 @@ package main
 import (
 	"fmt"
 	"invoice-maker/pkg/config"
+	"invoice-maker/pkg/template"
 	"log"
 	"os"
 
+	"github.com/76creates/stickers/flexbox"
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+
+	//"github.com/charmbracelet/lipgloss"
 	"github.com/spf13/viper"
 )
 
@@ -18,6 +26,7 @@ const (
 	ViewInvoices
 	ViewReceivers
 	ViewConfig
+	ViewInvoicePreview
 )
 
 type Config struct {
@@ -28,6 +37,49 @@ type Config struct {
 	InvoiceDirectory string           `yaml:"invoiceDirectory"`
 	viewList         list.Model
 	view             View
+	invoicesTable    table.Model
+	invoicePreview   flexbox.HorizontalFlexBox
+	receiversTable   table.Model
+	receivers        ReceiversModel
+}
+
+type JumpMainView struct{}
+
+func goMain() tea.Cmd {
+	return func() tea.Msg {
+		return JumpMainView{}
+	}
+
+}
+
+type ReceiversModel struct {
+	Receivers []config.Company
+}
+
+func (m ReceiversModel) Update(msg tea.Msg) (ReceiversModel, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.Key:
+		switch msg.String() {
+		case "h":
+			return m, goMain()
+		}
+	}
+
+	return m, nil
+}
+
+func (m ReceiversModel) Init() tea.Cmd {
+	return nil
+}
+
+func (m ReceiversModel) View() string {
+	msg := "receivers\n"
+	for _, v := range m.Receivers {
+		msg += fmt.Sprintf("%s\n", v.Name)
+		msg += fmt.Sprintf("    %s\n", v.Address)
+		msg += fmt.Sprintf("    %s\n", v.TaxID)
+	}
+	return msg
 }
 
 type item struct {
@@ -38,17 +90,51 @@ func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
 
+var HelpStyle lipgloss.Style = lipgloss.NewStyle().Padding(1, 0, 0, 2).Foreground(lipgloss.Color("#666"))
+
+type HelpFormat map[string]string
+
+func (hp HelpFormat) RenderHelp() string {
+	var content string
+	for i, v := range hp {
+		content += fmt.Sprintf("%s %s · ", i, v)
+	}
+
+	return HelpStyle.Render(content)
+}
+
 func main() {
-	c := Config{}
+	m := Config{}
 
 	listItems := []list.Item{
 		item{title: "Invoices", desc: "Show, modify and create invoices."},
 		item{title: "Receivers", desc: "Show, modify and create invoice receivers."},
 		item{title: "Config", desc: "Misc configs related to application."},
 	}
-	c.viewList = list.New(listItems, list.NewDefaultDelegate(), 10, 5)
+	m.viewList = list.New(listItems, list.NewDefaultDelegate(), 10, 5)
 
-	p := tea.NewProgram(c, tea.WithAltScreen())
+	m.invoicesTable = table.New(
+		table.WithColumns([]table.Column{
+			{Title: "Date", Width: 10},
+			{Title: "Payment Date", Width: 10},
+			{Title: "Invoice No.", Width: 11},
+			{Title: "Receiver", Width: 20},
+			{Title: "Net", Width: 8},
+			{Title: "Gross", Width: 8},
+		}),
+	)
+	m.invoicesTable.SetHeight(5)
+	m.invoicesTable.SetWidth(10)
+
+	m.invoicePreview = *flexbox.NewHorizontal(0, 0)
+	columns := []*flexbox.Column{
+		m.invoicePreview.NewColumn().AddCells(
+			flexbox.NewCell(1, 1),
+		),
+	}
+	m.invoicePreview.AddColumns(columns)
+
+	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
@@ -60,20 +146,26 @@ type InitEvent struct{}
 
 func (m Config) Init() tea.Cmd {
 	m.viewList = list.New(m.viewList.Items(), list.NewDefaultDelegate(), 0, 0)
+
 	return func() tea.Msg {
 		return InitEvent{}
 	}
 }
 func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
+	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
+	case JumpMainView:
+		m.view = ViewMain
 	case InitEvent:
+		m.view = ViewMain
+
+		// viper
 		appname := "invoice-maker"
 		viper.SetConfigName("config")
 		viper.SetConfigType("yaml")
 		viper.AddConfigPath("$HOME/.config/" + appname)
-
 		if err := viper.ReadInConfig(); err != nil {
 			return m, tea.Quit
 		}
@@ -88,15 +180,33 @@ func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			log.Fatal(err)
 			return m, tea.Quit
 		}
+		//viper end
 
-		m.view = ViewMain
+		// invoices
+		rows := []table.Row{}
+		for _, v := range m.Invoices {
+			rows = append(rows, table.Row{
+				v.DeliveryDate,
+				v.DueDate,
+				v.InvoiceNo,
+				v.Receiver.Name,
+				v.NetSum(),
+				v.GrossSum(),
+			})
+		}
+		m.invoicesTable.SetRows(rows)
+		//m.invoiceView.SetRows(rows)
+		// invoices end
 	case tea.WindowSizeMsg:
 		m.viewList.SetSize(msg.Width, msg.Height)
+
+		m.invoicesTable.SetWidth(msg.Width)
+		m.invoicesTable.SetHeight(msg.Height)
+
+		m.invoicePreview.SetWidth(msg.Width)
+		m.invoicePreview.SetHeight(msg.Height)
 	case tea.KeyMsg:
-		if msg.Type == tea.KeyCtrlC ||
-			msg.Type == tea.KeyCtrlD ||
-			msg.Type == tea.KeyCtrlQ ||
-			msg.String() == "q" {
+		if msg.Type == tea.KeyCtrlC || msg.Type == tea.KeyCtrlD || msg.Type == tea.KeyCtrlQ || msg.String() == "q" {
 			return m, tea.Quit
 		}
 
@@ -119,21 +229,43 @@ func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "h":
 				m.view = ViewMain
+			case "j":
+				m.invoicesTable.MoveDown(1)
+			case "k":
+				m.invoicesTable.MoveUp(1)
+			case "p":
+				m.view = ViewInvoicePreview
 			}
-		case ViewReceivers:
+			cmds = append(cmds, cmd)
+		case ViewInvoicePreview:
+			switch msg.String() {
+			case "h":
+				m.view = ViewInvoices
+			}
+		default:
 			switch msg.String() {
 			case "h":
 				m.view = ViewMain
 			}
-		default:
-			log.Fatal("invalid view", m.view)
 		}
 	default:
 	}
 
-	m.viewList, cmd = m.viewList.Update(msg)
+	switch m.view {
+	case ViewMain:
+		m.viewList, cmd = m.viewList.Update(msg)
+		cmds = append(cmds, cmd)
+	case ViewInvoices:
+		m.invoicesTable, cmd = m.invoicesTable.Update(msg)
+		m.invoicePreview.GetColumn(0).GetCell(0).SetContent(m.invoicesTable.View())
+		cmds = append(cmds, cmd)
+	case ViewReceivers:
+		m.receivers.Receivers = m.Receivers
+		m.receivers, cmd = m.receivers.Update(msg)
 
-	return m, cmd
+	}
+
+	return m, tea.Batch(cmds...)
 }
 
 func (m Config) View() string {
@@ -142,19 +274,46 @@ func (m Config) View() string {
 		m.viewList.Title = "Choose action"
 		return m.viewList.View()
 	case ViewInvoices:
-		msg := "invoices\n"
-		for _, v := range m.Invoices {
-			msg += fmt.Sprintf("Number: %s/n" + v.InvoiceNo)
+		availHeight := m.invoicePreview.GetHeight()
+
+		helpBubble := help.New()
+		kb := []key.Binding{
+			key.NewBinding(
+				key.WithKeys("p"),
+				key.WithHelp("p", "preview"),
+			),
+			key.NewBinding(
+				key.WithKeys("e"),
+				key.WithHelp("e", "edit"),
+			),
 		}
-		return msg
+		helpContent := helpBubble.ShortHelpView(kb)
+		availHeight -= lipgloss.Height(helpContent)
+
+		m.invoicePreview.SetHeight(availHeight)
+		content := m.invoicePreview.Render()
+
+		var sections []string
+		sections = append(sections, content)
+		sections = append(sections, helpContent)
+		return lipgloss.JoinVertical(lipgloss.Left, sections...)
 	case ViewReceivers:
-		msg := "receivers\n"
-		for _, v := range m.Receivers {
-			msg += fmt.Sprintf("%s\n", v.Name)
-			msg += fmt.Sprintf("    %s\n", v.Address)
-			msg += fmt.Sprintf("    %s\n", v.TaxID)
+		return m.receivers.View()
+	case ViewInvoicePreview:
+		picked := m.invoicesTable.SelectedRow()
+		if picked == nil {
+			return ""
 		}
-		return msg
+		for _, v := range m.Invoices {
+			if v.InvoiceNo == picked[2] && v.NetSum() == picked[4] {
+				content, err := template.GetContent(&v)
+				if err != nil {
+					panic(err)
+				}
+				return content
+			}
+		}
+		return ""
 	default:
 		return "invalid view"
 	}

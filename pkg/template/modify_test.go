@@ -23,9 +23,7 @@ func TestInsertItems(t *testing.T) {
 func TestSumUp(t *testing.T) {
 	items := []config.InvoiceItem{}
 	items = append(items, config.InvoiceItem{
-		Price:     decimal.NewFromInt(100),
-		VatAmount: decimal.NewFromInt(2300),
-		Total:     decimal.NewFromInt(12300),
+		Price:     "100",
 		Quantity:  100,
 		VatRate:   23,
 	})
@@ -55,7 +53,7 @@ func TestTotal(t *testing.T) {
 	invoice := &config.Invoice{}
 	invoice.Items = append(invoice.Items, config.InvoiceItem{
 		Title:    "Test",
-		Price:    decimal.NewFromInt32(1000),
+		Price:    "1000",
 		VatRate:  23,
 		Quantity: 2,
 	})

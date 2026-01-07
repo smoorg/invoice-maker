@@ -34,14 +34,14 @@ func TestApplyInvoiceRows(t *testing.T) {
 				Title:    "Cheese",
 				Quantity: 2,
 				Unit:     "kg",
-				Price:    decimal.NewFromInt(20),
+				Price:    "20",
 				VatRate:  15,
 			},
 			{
 				Title:    "Cheese",
 				Quantity: 2,
 				Unit:     "kg",
-				Price:    decimal.NewFromInt(20),
+				Price:    "20",
 				VatRate:  15,
 			},
 		},
@@ -72,13 +72,17 @@ func TestTotalCalculations(t *testing.T) {
 
 	item := config.InvoiceItem{}
 	item.VatRate = 23
-	item.Price = decimal.NewFromInt32(25000)
+	item.Price = "25000"
 	item.Quantity = 1
-	total := item.Price.Mul(decimal.NewFromInt32(item.Quantity)).Mul(decimal.NewFromFloat32(1.23))
+	price, err := decimal.NewFromString(item.Price)
+	if err != nil {
+		t.Error(err)
+	}
+	total := price.Mul(decimal.NewFromInt32(item.Quantity)).Mul(decimal.NewFromFloat32(1.23))
 
 	i.Items = append(i.Items, item)
 
-	err := template.ApplyInvoice(&sut, rowTemplate, i)
+	err = template.ApplyInvoice(&sut, rowTemplate, i)
 	if err != nil {
 		t.Error("error thrown", err)
 	}

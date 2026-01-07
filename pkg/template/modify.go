@@ -1,7 +1,6 @@
 package template
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -30,7 +29,7 @@ func replaceField(result *string, label string, value string) error {
 
 		// this is when amount of characters for a field value is less than field in the template
 		if offset < 0 {
-			return errors.New(fmt.Sprintf("offset for field '%s' is negative", label))
+			return fmt.Errorf("offset for field '%s' is negative", label)
 		}
 
 		padding := ""
@@ -65,9 +64,9 @@ func SumUp(items *[]config.InvoiceItem) (decimal.Decimal, decimal.Decimal, decim
 	for _, item := range *items {
 		item.CalculateItemTotal()
 
-		amountSum = amountSum.Add(item.Amount)
-		vatSum = vatSum.Add(item.VatAmount)
-		totSum = totSum.Add(item.Total)
+		amountSum = amountSum.Add(item.CalculateAmount())
+		vatSum = vatSum.Add(item.CalculateVatAmount())
+		totSum = totSum.Add(item.CalculateItemTotal())
 	}
 
 	return amountSum, vatSum, totSum
@@ -86,11 +85,11 @@ func ApplyInvoice(templateStr *string, rowTemplate string, cfg *config.Invoice) 
 				"Title":  fmt.Sprint(cfg.Items[i].Title),
 				"Qty":    fmt.Sprint(cfg.Items[i].Quantity),
 				"Unit":   fmt.Sprint(cfg.Items[i].Unit),
-				"Price":  fmt.Sprint(cfg.Items[i].Price.StringFixed(2)),
-				"Amount": fmt.Sprint(cfg.Items[i].Amount.StringFixed(2)),
+				"Price":  fmt.Sprint(cfg.Items[i].Price),
+				"Amount": fmt.Sprint(cfg.Items[i].Amount),
 				"VR":     fmt.Sprintf("%d%%", cfg.Items[i].VatRate),
-				"VA":     fmt.Sprint(cfg.Items[i].VatAmount.StringFixed(2)),
-				"Total":  fmt.Sprint(cfg.Items[i].Total.StringFixed(2)),
+				"VA":     fmt.Sprint(cfg.Items[i].CalculateVatAmount().StringFixed(2)),
+				"Total":  fmt.Sprint(cfg.Items[i].CalculateItemTotal().StringFixed(2)),
 			}
 
 			for k, v := range *itemFields {
