@@ -44,6 +44,20 @@ func (c *Config) GetInvoiceDirectory() (string, error) {
 	return invoicePath, nil
 }
 
+func GetInvoicePath(invoiceDirectory string) (string, error) {
+	if invoiceDirectory == "" {
+		return "", errors.New("No defined invoice directory to save the file.")
+	}
+	path := invoiceDirectory
+	invoicePath := filepath.Join(path, time.Now().Format("2006"), time.Now().Format("01"))
+
+	if err := os.MkdirAll(invoicePath, 0744); err != nil {
+		return "", err
+	}
+
+	return invoicePath, nil
+}
+
 func IsValidInvoiceDirectory(dir string) bool {
 	testDir := filepath.Join(dir, fmt.Sprint(uuid.New()))
 
