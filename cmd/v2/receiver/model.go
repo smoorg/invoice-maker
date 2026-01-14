@@ -14,7 +14,7 @@ type ReceiversModel struct {
 
 func (m ReceiversModel) Update(msg tea.Msg) (ReceiversModel, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.Key:
+	case tea.KeyMsg:
 		switch msg.String() {
 		case "h":
 			return m, pkg.GoMain()
