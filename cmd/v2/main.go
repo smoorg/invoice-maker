@@ -1,11 +1,18 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"invoice-maker/pkg/config"
+	"invoice-maker/pkg/font"
+	"invoice-maker/pkg/pdf"
 	"invoice-maker/pkg/template"
 	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"time"
 
 	"github.com/76creates/stickers/flexbox"
 	"github.com/charmbracelet/bubbles/help"
@@ -27,6 +34,7 @@ const (
 	ViewReceivers
 	ViewConfig
 	ViewInvoicePreview
+	ViewInvoicePrint
 )
 
 type Config struct {
@@ -42,6 +50,8 @@ type Config struct {
 	invoicePreview   flexbox.HorizontalFlexBox
 	receiversTable   table.Model
 	receivers        ReceiversModel
+	printContent     string
+	invoicePrintPath string
 }
 
 type JumpMainView struct{}
@@ -181,6 +191,15 @@ func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			log.Fatal(err)
 			return m, tea.Quit
 		}
+		if err := viper.UnmarshalKey("invoiceDirectory", &m.config.InvoiceDirectory); err != nil {
+			log.Fatal(err)
+			return m, tea.Quit
+		}
+		if err := viper.UnmarshalKey("font", &m.config.Font); err != nil {
+			log.Fatal(err)
+			return m, tea.Quit
+		}
+
 		//viper end
 
 		// invoices
@@ -240,8 +259,29 @@ func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		case ViewInvoicePreview:
 			switch msg.String() {
-			case "h":
+			case "h", "p":
 				m.view = ViewInvoices
+			case "P":
+				picked := m.invoicesTable.SelectedRow()
+				inv, _, err := GetInvoice(m.config.Invoices, picked[2], picked[4])
+				if err != nil {
+					panic(err)
+				}
+
+				invContent, err := template.GetContent(inv)
+				m.invoicePrintPath = m.printInvoice(invContent)
+				m.view = ViewInvoicePrint
+			}
+		case ViewInvoicePrint:
+			switch msg.String() {
+			case "s":
+				go func(file string) {
+					cmd := exec.Command("xdg-open", file)
+					_, err := cmd.Output()
+					if err != nil {
+						log.Fatal(err)
+					}
+				}(m.invoicePrintPath)
 			}
 		default:
 			switch msg.String() {
@@ -305,17 +345,115 @@ func (m Config) View() string {
 		if picked == nil {
 			return ""
 		}
-		for _, v := range m.Invoices {
-			if v.InvoiceNo == picked[2] && v.NetSum() == picked[4] {
-				content, err := template.GetContent(&v)
-				if err != nil {
-					panic(err)
-				}
-				return content
-			}
+		content, err := GetInvoiceContent(m.config.Invoices, picked[2], picked[4])
+		if err != nil {
+			panic(err)
 		}
-		return ""
+		return content
+	case ViewInvoicePrint:
+		if m.invoicePrintPath == "" {
+			return "Missing invoice print path..."
+
+		}
+		content := fmt.Sprintf("Your invoice got print at %s", m.invoicePrintPath)
+		return content
 	default:
 		return "invalid view"
 	}
+}
+
+func GetInvoice(invoices []config.Invoice, invoiceNo string, netSum string) (*config.Invoice, int, error) {
+	for i, v := range invoices {
+		if v.InvoiceNo == invoiceNo && v.NetSum() == netSum {
+			return &v, i, nil
+		}
+	}
+
+	return nil, 0, errors.New("no such invoice")
+}
+func GetInvoiceContent(invoices []config.Invoice, invoiceNo string, netSum string) (string, error) {
+	invoice, _, err := GetInvoice(invoices, invoiceNo, netSum)
+	if err != nil {
+		return "", err
+	}
+
+	content, err := template.GetContent(invoice)
+	if err != nil {
+		return "", err
+	}
+
+	return content, nil
+}
+
+func SaveFile(dirname string, filename string, content []byte) error {
+	if err := os.MkdirAll(dirname, 0744); err != nil {
+		return err
+	}
+
+	mddir := filepath.Join(dirname, filename)
+
+	file, err := os.Create(mddir)
+	if err != nil {
+		return err
+	}
+	if _, err := file.Write(content); err != nil {
+		log.Fatal("write string err", err)
+		return err
+	}
+	return nil
+}
+
+func (m *Config) printInvoice(invContent string) string {
+	dir, err := m.config.GetInvoiceDirectory()
+	if err != nil {
+		panic(err)
+	}
+	fonts, err := font.FindFonts(m.config.Font.Family, m.config.Font.Style)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(fonts) == 0 {
+		errMsg := fmt.Sprint(
+			"font from the config could not be found in the system, font-family: ",
+			m.config.Font.Family, "font-style: ", m.config.Font.Style)
+		panic(errMsg)
+	}
+
+	htmlBytes, err := template.ToHTML(invContent)
+
+	name := time.Now().Format("2006-01-02 15:04:05")
+	mdName := name + ".md"
+	htmlName := name + ".html"
+	pdfName := name + ".pdf"
+
+	if err := SaveFile(dir, mdName, []byte(invContent)); err != nil {
+		panic("issue while writting markdown file: " + err.Error())
+	}
+	if err := SaveFile(dir, htmlName, htmlBytes); err != nil {
+		panic("issue while writting html file: " + err.Error())
+	}
+
+	re := regexp.MustCompile(`<?.pre>`)
+	pdfContent := re.ReplaceAllString(invContent, "")
+
+	pdf.InitializePdf("")
+
+	err = pdf.SetFont(
+		m.config.Font.Family,
+		m.config.Font.Style,
+		m.config.Font.Filepath,
+		8,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	pdf.SetText(pdfContent, 0, 4)
+
+	path := filepath.Join(dir, pdfName)
+	if err := pdf.Output(path); err != nil {
+		panic("pdf output: " + err.Error())
+	}
+	return path
 }
