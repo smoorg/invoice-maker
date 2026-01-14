@@ -31,10 +31,11 @@ const (
 
 type Config struct {
 	//Font             config.FontCfg   `yaml:"font"`
-	Issuer           config.Issuer    `yaml:"issuer"`
-	Receivers        []config.Company `yaml:"receivers"`
-	Invoices         []config.Invoice `yaml:"invoices"`
-	InvoiceDirectory string           `yaml:"invoiceDirectory"`
+	//Issuer           config.Issuer    `yaml:"issuer"`
+	//Receivers        []config.Company `yaml:"receivers"`
+	//Invoices         []config.Invoice `yaml:"invoices"`
+	//InvoiceDirectory string           `yaml:"invoiceDirectory"`
+	config           config.Config
 	viewList         list.Model
 	view             View
 	invoicesTable    table.Model
@@ -170,13 +171,13 @@ func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 
-		if err := viper.UnmarshalKey("issuer", &m.Issuer); err != nil {
+		if err := viper.UnmarshalKey("issuer", &m.config.Issuer); err != nil {
 			return m, tea.Quit
 		}
-		if err := viper.UnmarshalKey("receivers", &m.Receivers); err != nil {
+		if err := viper.UnmarshalKey("receivers", &m.config.Receivers); err != nil {
 			return m, tea.Quit
 		}
-		if err := viper.UnmarshalKey("invoices", &m.Invoices); err != nil {
+		if err := viper.UnmarshalKey("invoices", &m.config.Invoices); err != nil {
 			log.Fatal(err)
 			return m, tea.Quit
 		}
@@ -184,7 +185,7 @@ func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// invoices
 		rows := []table.Row{}
-		for _, v := range m.Invoices {
+		for _, v := range m.config.Invoices {
 			rows = append(rows, table.Row{
 				v.DeliveryDate,
 				v.DueDate,
@@ -260,7 +261,7 @@ func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.invoicePreview.GetColumn(0).GetCell(0).SetContent(m.invoicesTable.View())
 		cmds = append(cmds, cmd)
 	case ViewReceivers:
-		m.receivers.Receivers = m.Receivers
+		m.receivers.Receivers = m.config.Receivers
 		m.receivers, cmd = m.receivers.Update(msg)
 
 	}
