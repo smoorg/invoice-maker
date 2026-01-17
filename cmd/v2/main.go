@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"invoice-maker/cmd/v2/invoices"
 	"invoice-maker/cmd/v2/receiver"
+	"invoice-maker/pkg"
 	"invoice-maker/pkg/config"
+	pkg_help "invoice-maker/pkg/help"
 	"invoice-maker/pkg/view"
 	"log"
 	"os"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -26,12 +30,15 @@ type Config struct {
 	view     view.View
 
 	invoiceModel invoices.InvoicesModel
-
-	receiversTable table.Model
-	receivers      receiver.ReceiversModel
+	receivers    receiver.ReceiversModel
+	keys         keymap
+	helpContent  string
 }
 
-type JumpMainView struct{}
+type keymap struct {
+	Quit key.Binding
+	Next key.Binding
+}
 
 type item struct {
 	title, desc string
@@ -43,17 +50,6 @@ func (i item) FilterValue() string { return i.title }
 
 var HelpStyle lipgloss.Style = lipgloss.NewStyle().Padding(1, 0, 0, 2).Foreground(lipgloss.Color("#666"))
 
-type HelpFormat map[string]string
-
-func (hp HelpFormat) RenderHelp() string {
-	var content string
-	for i, v := range hp {
-		content += fmt.Sprintf("%s %s · ", i, v)
-	}
-
-	return HelpStyle.Render(content)
-}
-
 func main() {
 	m := Config{}
 
@@ -63,8 +59,34 @@ func main() {
 		item{title: "Config", desc: "Misc configs related to application."},
 	}
 	m.viewList = list.New(listItems, list.NewDefaultDelegate(), 10, 5)
+	m.viewList.SetShowHelp(false)
+	m.viewList.SetShowFilter(false)
 
 	m.invoiceModel = invoices.New(m.config)
+	m.receivers = receiver.New()
+
+	m.keys = keymap{
+		Quit: key.NewBinding(
+			key.WithKeys(
+				tea.KeyCtrlQ.String(),
+				tea.KeyCtrlC.String(),
+				tea.KeyCtrlD.String(),
+				"q",
+			),
+			key.WithHelp("^C/^D/^Q/q", "quit"),
+		),
+		Next: key.NewBinding(
+			key.WithKeys(
+				"l",
+				tea.KeyEnter.String(),
+				tea.KeyRight.String(),
+			),
+			key.WithHelp("→/l/enter", "next view"),
+		),
+	}
+
+	helpBubble := help.New()
+	m.helpContent = helpBubble.ShortHelpView(pkg_help.MapToBindingsList(m.keys))
 
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
@@ -97,7 +119,7 @@ func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case 2:
 			m.view = view.ViewConfig
 		}
-	case JumpMainView:
+	case pkg.JumpMainView:
 		m.view = view.ViewMain
 	case InitEvent:
 		m.view = view.ViewMain
@@ -145,21 +167,23 @@ func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.invoiceModel.SetConfig(m.config)
 		m.invoiceModel.SetRows(rows)
+
+		m.receivers.SetConfig(m.config.Receivers)
+
 	case tea.WindowSizeMsg:
-		m.viewList.SetSize(msg.Width, msg.Height)
+		m.viewList.SetSize(msg.Width, msg.Height-1)
 		m.invoiceModel.SetSize(msg.Width, msg.Height)
+		m.receivers.SetSize(msg.Width, msg.Height)
 	case tea.KeyMsg:
-		if msg.Type == tea.KeyCtrlC ||
-			msg.Type == tea.KeyCtrlD ||
-			msg.Type == tea.KeyCtrlQ ||
-			msg.String() == "q" {
+		switch {
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
 
 		switch m.view {
 		case view.ViewMain:
-			switch msg.String() {
-			case "enter", "l":
+			switch {
+			case key.Matches(msg, m.keys.Next):
 				item := m.viewList.GlobalIndex()
 				cmd = func() tea.Msg {
 					return SwitchViewEvent{item: item}
@@ -180,7 +204,6 @@ func (m Config) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.invoiceModel, cmd = m.invoiceModel.Update(msg)
 		cmds = append(cmds, cmd)
 	case view.ViewReceivers:
-		m.receivers.Receivers = m.config.Receivers
 		m.receivers, cmd = m.receivers.Update(msg)
 		cmds = append(cmds, cmd)
 
@@ -193,7 +216,8 @@ func (m Config) View() string {
 	switch m.view {
 	case view.ViewMain:
 		m.viewList.Title = "Choose action"
-		return m.viewList.View()
+		content := m.viewList.View() + "\n" + m.helpContent
+		return content
 	case view.ViewInvoices:
 		return m.invoiceModel.View()
 	case view.ViewReceivers:

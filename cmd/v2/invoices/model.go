@@ -3,11 +3,6 @@ package invoices
 import (
 	"errors"
 	"fmt"
-	"invoice-maker/pkg"
-	"invoice-maker/pkg/config"
-	"invoice-maker/pkg/font"
-	"invoice-maker/pkg/pdf"
-	"invoice-maker/pkg/template"
 	"log"
 	"os"
 	"os/exec"
@@ -15,11 +10,21 @@ import (
 	"regexp"
 	"time"
 
+	"invoice-maker/pkg"
+	"invoice-maker/pkg/config"
+	"invoice-maker/pkg/font"
+	pkg_help "invoice-maker/pkg/help"
+	"invoice-maker/pkg/pdf"
+	"invoice-maker/pkg/template"
+
 	"github.com/76creates/stickers/flexbox"
+
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/table"
+
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -31,21 +36,34 @@ const (
 	ViewPrint
 )
 
-type InvoicesModel struct {
-	invoices         []config.Invoice `yaml:"invoices"`
-	table            table.Model
-	InvoiceViewFlex  flexbox.HorizontalFlexBox
-	invoiceDirectory string
-	font             config.FontCfg
+type KeyMap struct {
+	Up    key.Binding
+	Down  key.Binding
+	Next  key.Binding
+	Print key.Binding
+	Back  key.Binding
+	Edit  key.Binding
+}
 
-	printContent     string
-	invoicePrintPath string
-	view             InvoiceView
+type InvoicesModel struct {
+	invoices  []config.Invoice `yaml:"invoices"`
+	invoice   InvoicePreviewModel
+	directory string
+	font      config.FontCfg
+
+	table table.Model
+	flex  flexbox.HorizontalFlexBox
+
+	helpContent  string
+	printContent string
+	printPath    string
+	view         InvoiceView
+	keys         KeyMap
 }
 
 func (m *InvoicesModel) SetConfig(cfg config.Config) {
 	m.invoices = cfg.Invoices
-	m.invoiceDirectory = cfg.InvoiceDirectory
+	m.directory = cfg.InvoiceDirectory
 	m.font = cfg.Font
 }
 
@@ -54,8 +72,8 @@ func (m *InvoicesModel) SetRows(rows []table.Row) {
 }
 
 func (m *InvoicesModel) SetSize(width int, height int) {
-	m.InvoiceViewFlex.SetWidth(width)
-	m.InvoiceViewFlex.SetHeight(height)
+	m.flex.SetWidth(width)
+	m.flex.SetHeight(height)
 	m.table.SetWidth(width)
 	m.table.SetHeight(height)
 }
@@ -75,15 +93,45 @@ func New(config config.Config) InvoicesModel {
 	m.table.SetHeight(5)
 	m.table.SetWidth(100)
 
-	m.InvoiceViewFlex = *flexbox.NewHorizontal(0, 0)
+	m.flex = *flexbox.NewHorizontal(0, 0)
 	columns := []*flexbox.Column{
-		m.InvoiceViewFlex.NewColumn().AddCells(
+		m.flex.NewColumn().AddCells(
 			flexbox.NewCell(1, 1),
 		),
 	}
-	m.InvoiceViewFlex.AddColumns(columns)
-	m.invoiceDirectory = config.InvoiceDirectory
+	m.flex.AddColumns(columns)
+	m.directory = config.InvoiceDirectory
 	m.font = config.Font
+
+	m.keys = KeyMap{
+		Up: key.NewBinding(
+			key.WithKeys("k", tea.KeyUp.String()),
+			key.WithHelp("↑/k", "up"),
+		),
+		Down: key.NewBinding(
+			key.WithKeys("j", tea.KeyDown.String()),
+			key.WithHelp("↓/j", "down"),
+		),
+		Next: key.NewBinding(
+			key.WithKeys("l", tea.KeyRight.String()),
+			key.WithHelp("→/l", "preview"),
+		),
+		Back: key.NewBinding(
+			key.WithKeys("h", tea.KeyLeft.String()),
+			key.WithHelp("←/h", "go back"),
+		),
+		Print: key.NewBinding(
+			key.WithKeys("p"),
+			key.WithHelp("p", "print"),
+		),
+		Edit: key.NewBinding(
+			key.WithKeys("e"),
+			key.WithHelp("e", "edit"),
+		),
+	}
+
+	helpBubble := help.New()
+	m.helpContent = helpBubble.ShortHelpView(pkg_help.MapToBindingsList(m.keys))
 
 	return m
 }
@@ -94,6 +142,7 @@ func (m InvoicesModel) Init() tea.Cmd {
 }
 func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 	var cmd tea.Cmd
+	var cmds []tea.Cmd
 	switch msg := msg.(type) {
 	case pkg.SetInvoiceRows:
 		rows := []table.Row{}
@@ -111,29 +160,30 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.table.SetWidth(msg.Width)
 		m.table.SetHeight(msg.Height)
-		m.InvoiceViewFlex.SetWidth(msg.Width)
-		m.InvoiceViewFlex.SetHeight(msg.Height)
+		m.flex.SetWidth(msg.Width)
+		m.flex.SetHeight(msg.Height)
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "h":
+		switch {
+		case key.Matches(msg, m.keys.Back):
 			switch m.view {
 			case ViewMain:
 				cmd = pkg.GoMain()
+				cmds = append(cmds, cmd)
 			case ViewPreview:
 				m.view = ViewMain
 			case ViewPrint:
 				m.view = ViewMain
 			}
-		case "j":
+		case key.Matches(msg, m.keys.Down):
 			m.table.MoveDown(1)
-		case "k":
+		case key.Matches(msg, m.keys.Up):
 			m.table.MoveUp(1)
-		case "l":
+		case key.Matches(msg, m.keys.Next):
 			switch m.view {
 			case ViewMain:
 				m.view = ViewPreview
 			}
-		case "p":
+		case key.Matches(msg, m.keys.Print):
 			m.view = ViewPrint
 
 			picked := m.table.SelectedRow()
@@ -141,7 +191,7 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 			if err != nil {
 				panic(err)
 			}
-			m.invoicePrintPath = m.printInvoice(invContent)
+			m.printPath = m.printInvoice(invContent)
 
 			go func(file string) {
 				cmd := exec.Command("xdg-open", file)
@@ -149,72 +199,98 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 				if err != nil {
 					log.Fatal(err)
 				}
-			}(m.invoicePrintPath)
+			}(m.printPath)
+		case key.Matches(msg, m.keys.Edit):
+			// TODO: implement
+			panic("unimplemented")
 		}
 	}
 
-	m.table, cmd = m.table.Update(msg)
-	m.InvoiceViewFlex.GetColumn(0).GetCell(0).SetContent(m.table.View())
+	switch m.view {
+	case ViewMain:
+		m.table, cmd = m.table.Update(msg)
+		cmds = append(cmds, cmd)
+		m.flex.GetColumn(0).GetCell(0).SetContent(m.table.View())
 
-	return m, cmd
+		picked := m.table.SelectedRow()
+		if picked == nil {
+			panic("no invoice selected")
+		}
+		for _, v := range m.invoices {
+			if v.InvoiceNo == picked[2] && v.NetSum() == picked[4] {
+				m.invoice.SetInvoice(v)
+			}
+		}
+	case ViewPreview:
+		m.invoice.Update(msg)
+	case ViewPrint:
+	}
+
+	return m, tea.Batch(cmds...)
 }
 func (m InvoicesModel) View() string {
 	content := ""
 	switch m.view {
 	case ViewPrint:
-		if m.invoicePrintPath == "" {
+		if m.printPath == "" {
 			return "Missing invoice print path..."
 
 		}
-		content = fmt.Sprintf("Your invoice got print at %s", m.invoicePrintPath)
+		content = fmt.Sprintf("Your invoice got print at:\n%s", m.printPath)
+
+		buttonStyle := lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FFF7DB")).
+			Background(lipgloss.Color("#888B7E")).
+			Padding(0, 3).
+			MarginTop(1)
+
+		activeButtonStyle := buttonStyle.
+			Foreground(lipgloss.Color("#FFF7DB")).
+			Background(lipgloss.Color("#F25D94")).
+			MarginRight(2).
+			Underline(true)
+		//normal := lipgloss.Color("#EEEEEE")
+		question := lipgloss.NewStyle().Width(50).Align(lipgloss.Center).Render(content)
+		okButton := activeButtonStyle.Render("Yes")
+		cancelButton := buttonStyle.Render("Maybe")
+		buttons := lipgloss.JoinHorizontal(lipgloss.Top, okButton, cancelButton)
+		subtle := lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
+		dialogBoxStyle := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#874BFD")).
+			Padding(1, 0).
+			BorderTop(true).
+			BorderLeft(true).
+			BorderRight(true).
+			BorderBottom(true)
+		ui := lipgloss.JoinVertical(lipgloss.Center, question, buttons)
+
+		//base := lipgloss.NewStyle().Foreground(normal)
+		dialog := lipgloss.Place(150, 9,
+			lipgloss.Center, lipgloss.Center,
+			dialogBoxStyle.Render(ui),
+			lipgloss.WithWhitespaceChars("猫咪"),
+			lipgloss.WithWhitespaceForeground(subtle),
+		)
+		content = dialog
 	case ViewPreview:
-		picked := m.table.SelectedRow()
-		if picked == nil {
-			return ""
-		}
-		for _, v := range m.invoices {
-			if v.InvoiceNo == picked[2] && v.NetSum() == picked[4] {
-				c, err := template.GetContent(&v)
-				if err != nil {
-					panic(err)
-				}
-				content = c
-			}
-		}
+		return m.invoice.View()
 	case ViewMain:
-		availHeight := m.InvoiceViewFlex.GetHeight()
-
-		helpBubble := help.New()
-		kb := []key.Binding{
-			key.NewBinding(
-				key.WithKeys("l"),
-				key.WithHelp("p", "preview"),
-			),
-			key.NewBinding(
-				key.WithKeys("p"),
-				key.WithHelp("p", "print"),
-			),
-			key.NewBinding(
-				key.WithKeys("e"),
-				key.WithHelp("e", "edit"),
-			),
-		}
-		helpContent := helpBubble.ShortHelpView(kb)
-		availHeight -= lipgloss.Height(helpContent)
-
-		m.InvoiceViewFlex.SetHeight(availHeight)
-		content = m.InvoiceViewFlex.Render()
+		availHeight := m.flex.GetHeight()
+		availHeight -= lipgloss.Height(m.helpContent)
+		m.flex.SetHeight(availHeight)
+		content = m.flex.Render()
 
 		var sections []string
 		sections = append(sections, content)
-		sections = append(sections, helpContent)
+		sections = append(sections, m.helpContent)
 		content = lipgloss.JoinVertical(lipgloss.Left, sections...)
 	}
 	return content
 }
 
 func (m *InvoicesModel) printInvoice(invContent string) string {
-	dir, err := config.GetInvoicePath(m.invoiceDirectory)
+	dir, err := config.GetInvoicePath(m.directory)
 	if err != nil {
 		panic(err)
 	}
