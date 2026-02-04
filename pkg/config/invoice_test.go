@@ -11,14 +11,14 @@ import (
 
 func TestPriceCalculation(t *testing.T) {
 	i := config.InvoiceItem{
-		Price:    decimal.NewFromInt32(1000),
+		Price:    "1000",
 		Quantity: 23,
 	}
 
 	i.CalculateAmount()
-	sut := i.Amount.String()
+	sut := i.Amount
 
-	if sut != "23000" {
+	if sut != "23000.00" {
 		t.Error("invalid sum", sut)
 	}
 }
@@ -28,27 +28,27 @@ func TestVatCalculation(t *testing.T) {
 	{
 
 		i := config.InvoiceItem{
-			Price:    decimal.NewFromInt32(1000),
+			Price:    "1000",
 			Quantity: 1,
 			VatRate:  23,
 		}
 		i.CalculateVatAmount()
 
-		sut := i.VatAmount.String()
-		if sut != "230" {
+		sut := i.CalculateVatAmount().StringFixed(2)
+		if sut != "230.00" {
 			t.Error("invalid vat", sut)
 		}
 	}
 
 	{
 		i := config.InvoiceItem{
-			Price:    decimal.NewFromInt32(1),
+			Price:    "1",
 			Quantity: 1,
 			VatRate:  23,
 		}
 
 		i.CalculateVatAmount()
-		sut := i.VatAmount.String()
+		sut := i.CalculateVatAmount().StringFixed(2)
 
 		if sut != "0.23" {
 			t.Error("invalid vat", sut)
@@ -59,7 +59,7 @@ func TestVatCalculation(t *testing.T) {
 func TestCalculateTotal(t *testing.T) {
 	inv := &config.Invoice{}
 	inv.Items = append(inv.Items, config.InvoiceItem{
-		Price:    decimal.NewFromInt32(10),
+		Price:    "10",
 		Quantity: 2,
 	})
 	inv.CalculateInvoice()
@@ -68,34 +68,38 @@ func TestCalculateTotal(t *testing.T) {
 		t.Error("should be single Item")
 	}
 
-	if !inv.Items[0].Amount.Equal(decimal.NewFromInt32(20)) {
+	amount, err := decimal.NewFromString(inv.Items[0].Amount)
+	if err != nil {
+		t.Error(err)
+	}
+	if !amount.Equal(decimal.NewFromInt32(20)) {
 		fmt.Print(inv.Items)
 		t.Error(inv.Items[0].Amount, "should be 20")
 	}
 }
 
 func TestAddInvoiceItem(t *testing.T) {
-    inv := &config.Invoice{}
-    inv.AddNewItem()
+	inv := &config.Invoice{}
+	inv.AddNewItem()
 
-    if len(inv.Items) != 1 {
-	t.Fatal("item was not added properly")
-    }
+	if len(inv.Items) != 1 {
+		t.Fatal("item was not added properly")
+	}
 }
 
 func TestDeleteInvoiceItem(t *testing.T) {
-    inv := &config.Invoice{
-	Items: []config.InvoiceItem{
-	    {Title: "abc"},
-	},
-    }
+	inv := &config.Invoice{
+		Items: []config.InvoiceItem{
+			{Title: "abc"},
+		},
+	}
 
-    if len(inv.Items) != 1 {
-	t.Fatal("item was not added properly")
-    }
+	if len(inv.Items) != 1 {
+		t.Fatal("item was not added properly")
+	}
 
-    inv.DeleteInvoiceItem(0)
-    if len(inv.Items) != 0 {
-	t.Fatal("item was not deleted properly")
-    }
+	inv.DeleteInvoiceItem(0)
+	if len(inv.Items) != 0 {
+		t.Fatal("item was not deleted properly")
+	}
 }

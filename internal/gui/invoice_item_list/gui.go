@@ -45,7 +45,7 @@ func invoiceItemList(tui *types.TUI, invoice *config.Invoice, invoiceRow *int) t
 			table.
 				SetCellSimple(index, 0, invoice.Title).
 				SetCellSimple(index, 1, invoice.Unit).
-				SetCellSimple(index, 2, invoice.Price.String()).
+				SetCellSimple(index, 2, invoice.Price).
 				SetCellSimple(index, 3, fmt.Sprint(invoice.Quantity)).
 				SetCellSimple(index, 4, fmt.Sprint(invoice.VatRate))
 		}

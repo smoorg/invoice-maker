@@ -167,8 +167,7 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 		case key.Matches(msg, m.keys.Back):
 			switch m.view {
 			case ViewMain:
-				cmd = pkg.GoMain()
-				cmds = append(cmds, cmd)
+				cmds = append(cmds, pkg.GoMain())
 			case ViewPreview:
 				m.view = ViewMain
 			case ViewPrint:

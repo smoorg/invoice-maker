@@ -39,9 +39,9 @@ func renderItem(tui *types.TUI, invoice *config.Invoice, invoiceIndex *int, invo
 		AddInputField(config.FieldUnit, item.Unit, 10, nil, func(text string) {
 			item.Unit = text
 		}).
-		AddInputField(config.FieldPrice, item.Price.String(), 5, nil, func(text string) {
+		AddInputField(config.FieldPrice, item.Price, 5, nil, func(text string) {
 			if val, err := decimal.NewFromString(text); err == nil {
-				item.Price = val
+				item.Price = val.StringFixed(2)
 			}
 		}).
 		AddInputField(config.FieldQuantity, fmt.Sprint(item.Quantity), 5, nil, func(text string) {

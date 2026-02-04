@@ -1,7 +1,9 @@
 package font
 
 import (
+	"fmt"
 	"os/exec"
+	"slices"
 	"strings"
 )
 
@@ -12,12 +14,7 @@ type Font struct {
 }
 
 func HasFontFamily(fonts []string, predicate string) bool {
-	for _, family := range fonts {
-		if family == predicate {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(fonts, predicate)
 }
 
 var fonts = make([]Font, 0)
@@ -33,8 +30,8 @@ func GetFonts() ([]Font, error) {
 	}
 
 	text := string(out)
-	lines := strings.Split(text, "\n")
-	for _, v := range lines {
+	lines := strings.SplitSeq(text, "\n")
+	for v := range lines {
 		line := strings.Split(v, ":")
 
 		font := Font{
@@ -111,10 +108,27 @@ func FindFonts(family string, style string) ([]Font, error) {
 			continue
 		}
 		if style != "" && v.Style != style {
-			continue
+			// could be many
+			if !strings.Contains(fmt.Sprintf(",%s,", style), v.Style) {
+				continue
+			}
 		}
 
+		// duplicated list
 		list = append(list, v)
 	}
-	return list, err
+
+	// deduplication logic
+	seen := make(map[string]bool)
+	result := []Font{}
+
+	for _, item := range list {
+		tag := item.Family+item.Style
+		if !seen[tag] {
+			seen[tag] = true
+			result = append(result, item)
+		}
+	}
+
+	return result, err
 }

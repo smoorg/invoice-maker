@@ -17,7 +17,10 @@ type keyMap struct {
 	Up   key.Binding
 	Down key.Binding
 	Back key.Binding
+	Edit key.Binding
 }
+
+type view uint8
 
 type ReceiversModel struct {
 	receivers []config.Company `yaml:"receivers"`
@@ -60,6 +63,10 @@ func New() ReceiversModel {
 			key.WithKeys("j", tea.KeyDown.String()),
 			key.WithHelp("j", "down"),
 		),
+		Edit: key.NewBinding(
+			key.WithKeys("e"),
+			key.WithHelp("e", "edit"),
+		),
 	}
 
 	helpBubble := help.New()
@@ -97,6 +104,7 @@ func (m ReceiversModel) Init() tea.Cmd {
 func (m ReceiversModel) Update(msg tea.Msg) (ReceiversModel, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.table.SetWidth(msg.Width)
@@ -111,20 +119,27 @@ func (m ReceiversModel) Update(msg tea.Msg) (ReceiversModel, tea.Cmd) {
 			m.table.MoveDown(1)
 		case key.Matches(msg, m.keyBindings.Up):
 			m.table.MoveUp(1)
+		case key.Matches(msg, m.keyBindings.Edit):
+			row := m.table.SelectedRow()
+			for _, v := range m.receivers {
+				if v.Name == row[0] && v.Address == row[1] &&
+					v.TaxID == row[2] {
+					cmds = append(cmds, pkg.GoReceiverEdit(v))
+				}
+			}
 		}
-	}
 
+	}
 	m.table, cmd = m.table.Update(msg)
 	cmds = append(cmds, cmd)
 	m.flex.GetColumn(0).GetCell(0).SetContent(m.table.View())
 
-	return m, nil
+	return m, tea.Batch(cmds...)
 }
 
 func (m ReceiversModel) View() string {
 	var content string
 	var sections []string
-
 	availHeight := m.flex.GetHeight()
 	availHeight -= lipgloss.Height(m.helpContent)
 	m.flex.SetHeight(availHeight)

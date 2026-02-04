@@ -6,5 +6,6 @@ const (
 	ViewMain View = iota
 	ViewInvoices
 	ViewReceivers
+	ViewReceiverEdit
 	ViewConfig
 )

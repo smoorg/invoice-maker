@@ -6,7 +6,7 @@ import (
 )
 
 func TestFindRobotoFont(t *testing.T) {
-	fonts, err := f.FindFonts("Roboto", "Medium")
+	fonts, err := f.FindFonts("FreeSerif", "italic")
 
 	if err != nil || len(fonts) == 0 {
 		t.Error("should find roboto font")
@@ -18,7 +18,7 @@ func TestFindRobotoFont(t *testing.T) {
 }
 
 func TestFindStyles(t *testing.T) {
-	fonts, err := f.GetFontStyles("Roboto")
+	fonts, err := f.GetFontStyles("FreeSans")
 
 	if err != nil {
 		t.Error(err)
