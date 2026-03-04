@@ -162,6 +162,8 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 		m.table.SetHeight(msg.Height)
 		m.flex.SetWidth(msg.Width)
 		m.flex.SetHeight(msg.Height)
+	case pkg.JumpInvoicePreview:
+		m.view = ViewPreview
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Back):
@@ -174,13 +176,20 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 				m.view = ViewMain
 			}
 		case key.Matches(msg, m.keys.Down):
-			m.table.MoveDown(1)
+			switch m.view {
+			case ViewMain:
+				m.table.MoveDown(1)
+			}
 		case key.Matches(msg, m.keys.Up):
-			m.table.MoveUp(1)
+			switch m.view {
+			case ViewMain:
+				m.table.MoveUp(1)
+			}
 		case key.Matches(msg, m.keys.Next):
 			switch m.view {
 			case ViewMain:
-				m.view = ViewPreview
+				cmd = pkg.GoInvoicePreview()
+				cmds = append(cmds, cmd)
 			}
 		case key.Matches(msg, m.keys.Print):
 			m.view = ViewPrint
@@ -206,6 +215,8 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 	}
 
 	switch m.view {
+	case ViewPreview:
+		m.invoice.Update(msg)
 	case ViewMain:
 		m.table, cmd = m.table.Update(msg)
 		cmds = append(cmds, cmd)
@@ -220,8 +231,6 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 				m.invoice.SetInvoice(v)
 			}
 		}
-	case ViewPreview:
-		m.invoice.Update(msg)
 	case ViewPrint:
 	}
 
@@ -230,6 +239,8 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 func (m InvoicesModel) View() string {
 	content := ""
 	switch m.view {
+	case ViewPreview:
+		return m.invoice.View()
 	case ViewPrint:
 		if m.printPath == "" {
 			return "Missing invoice print path..."
@@ -272,8 +283,6 @@ func (m InvoicesModel) View() string {
 			lipgloss.WithWhitespaceForeground(subtle),
 		)
 		content = dialog
-	case ViewPreview:
-		return m.invoice.View()
 	case ViewMain:
 		availHeight := m.flex.GetHeight()
 		availHeight -= lipgloss.Height(m.helpContent)

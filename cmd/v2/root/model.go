@@ -63,7 +63,7 @@ func NewRootModel() RootModel {
 	m.invoiceModel = invoices.New(m.config)
 	m.receivers = receiver.New()
 	m.receiverEdit = edit.New()
-	m.configModel = *configview.NewConfigModel()
+	m.configModel = configview.New(m.config)
 
 	m.view = view.ViewMain
 
@@ -193,6 +193,7 @@ func (m RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.viewList.SetSize(msg.Width, msg.Height-1)
 		m.invoiceModel.SetSize(msg.Width, msg.Height)
 		m.receivers.SetSize(msg.Width, msg.Height)
+		m.configModel.SetSize(msg.Width, msg.Height)
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Quit):
