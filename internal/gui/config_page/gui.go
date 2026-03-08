@@ -30,18 +30,18 @@ func configPage(tui *types.TUI) *tview.Form {
 	page := tview.NewForm()
 	tui.SetDefaultStyle(page.Box)
 
-	page.AddInputField("Invoice Directory", tui.Config.InvoiceDirectory, 80, nil, func(text string) {
-		tui.Config.InvoiceDirectory = filepath.Join(text)
+	page.AddInputField("Invoice Directory", tui.Config.Config.InvoiceDirectory, 80, nil, func(text string) {
+		tui.Config.Config.InvoiceDirectory = filepath.Join(text)
 	})
 
 	setFontStyle := func(opt string, i int) {
 		if i < 0 || opt == "" {
 			return
 		}
-		tui.Config.Font.SetStyle(opt)
+		tui.Config.Config.SetStyle(opt)
 
-		if font, err := font.FindFonts(tui.Config.Font.Family, tui.Config.Font.Style); err == nil {
-			tui.Config.Font.SetPath(font[0].Filepath)
+		if font, err := font.FindFonts(tui.Config.Config.Family, tui.Config.Config.Style); err == nil {
+			tui.Config.Config.SetPath(font[0].Filepath)
 		}
 	}
 
@@ -54,7 +54,7 @@ func configPage(tui *types.TUI) *tview.Form {
 		if err != nil || len(fonts) == 0 {
 			return
 		}
-		tui.Config.Font.SetFamily(fonts[0].Family)
+		tui.Config.Config.SetFamily(fonts[0].Family)
 
 		styleDropdown := page.GetFormItem(page.GetFormItemIndex("Font Style"))
 		if len(fonts) > 0 {
@@ -77,7 +77,7 @@ func configPage(tui *types.TUI) *tview.Form {
 
 	pickedIndex := -1
 	for i, v := range ff {
-		if v == tui.Config.Font.Family {
+		if v == tui.Config.Config.Family {
 			pickedIndex = i
 		}
 	}
@@ -85,9 +85,9 @@ func configPage(tui *types.TUI) *tview.Form {
 	fontFamilyDropdown.(*tview.DropDown).SetCurrentOption(pickedIndex)
 
 	pickedStyle := -1
-	s, err := font.GetFontStyles(tui.Config.Font.Family)
+	s, err := font.GetFontStyles(tui.Config.Config.Family)
 	for i, v := range s {
-		if v == tui.Config.Font.Style {
+		if v == tui.Config.Config.Style {
 			pickedStyle = i
 			break
 		}
@@ -100,7 +100,7 @@ func configPage(tui *types.TUI) *tview.Form {
 	page.SetBorder(true)
 
 	page.AddButton("Save", func() {
-		if valid := config.IsValidInvoiceDirectory(tui.Config.InvoiceDirectory); valid == false {
+		if valid := config.IsValidInvoiceDirectory(tui.Config.Config.InvoiceDirectory); valid == false {
 			msg := "Invoice directory provided is not a valid directory or no privileges to modify it. Please modify it accordingly and ensure its absolute path."
 			modal.Error(tui, msg, types.PageConfig, 40, 5, "Error", func() {
 				tui.RefreshConfig()

@@ -63,8 +63,8 @@ type InvoicesModel struct {
 
 func (m *InvoicesModel) SetConfig(cfg config.Config) {
 	m.invoices = cfg.Invoices
-	m.directory = cfg.InvoiceDirectory
-	m.font = cfg.Font
+	m.directory = cfg.Config.InvoiceDirectory
+	m.font = cfg.Config
 }
 
 func (m *InvoicesModel) SetRows(rows []table.Row) {
@@ -100,8 +100,8 @@ func New(config config.Config) InvoicesModel {
 		),
 	}
 	m.flex.AddColumns(columns)
-	m.directory = config.InvoiceDirectory
-	m.font = config.Font
+	m.directory = config.Config.InvoiceDirectory
+	m.font = config.Config
 
 	m.keys = KeyMap{
 		Up: key.NewBinding(

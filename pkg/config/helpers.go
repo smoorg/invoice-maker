@@ -31,10 +31,10 @@ func getConfigFile() string {
 
 // Picks invoice directory user configured or ~/.config/invoice-maker/[year]/[month]
 func (c *Config) GetInvoiceDirectory() (string, error) {
-	if c.InvoiceDirectory == "" {
+	if c.Config.InvoiceDirectory == "" {
 		return "", errors.New("No defined invoice directory to save the file.")
 	}
-	path := c.InvoiceDirectory
+	path := c.Config.InvoiceDirectory
 	invoicePath := filepath.Join(path, time.Now().Format("2006"), time.Now().Format("01"))
 
 	if err := os.MkdirAll(invoicePath, 0744); err != nil {
@@ -82,10 +82,10 @@ func GetConfig() (*Config, error) {
 	configYaml, err := os.ReadFile(getConfigFile())
 	if err != nil {
 		file, fileCreateErr := os.Create(getConfigFile())
-		defer file.Close()
 		if fileCreateErr != nil {
 			return nil, errors.New("unable to create yaml config file")
 		}
+		defer file.Close()
 
 		_, err = file.Read(configYaml)
 	}

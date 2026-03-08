@@ -56,21 +56,20 @@ func NewRootModel() RootModel {
 			desc:  "Misc configs related to application.",
 		},
 	}
+	m.view = view.ViewMain
 	m.viewList = list.New(listItems, list.NewDefaultDelegate(), 10, 5)
 	m.viewList.SetShowHelp(false)
 	m.viewList.SetShowFilter(false)
-
-	m.invoiceModel = invoices.New(m.config)
-	m.receivers = receiver.New()
-	m.receiverEdit = edit.New()
-	m.configModel = configview.New(m.config)
-
-	m.view = view.ViewMain
 
 	err := setConfig(&m.config)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	m.invoiceModel = invoices.New(m.config)
+	m.receivers = receiver.New()
+	m.receiverEdit = edit.New()
+	m.configModel = configview.New(m.config)
 
 	rows := []table.Row{}
 	for _, v := range m.config.Invoices {
@@ -85,8 +84,8 @@ func NewRootModel() RootModel {
 	}
 	m.invoiceModel.SetConfig(m.config)
 	m.invoiceModel.SetRows(rows)
-
 	m.receivers.SetConfig(m.config.Receivers)
+
 
 	m.keys = keymap{
 		Quit: key.NewBinding(
@@ -135,10 +134,10 @@ func setConfig(config *config.Config) error {
 	if err := viper.UnmarshalKey("invoices", &config.Invoices); err != nil {
 		return err
 	}
-	if err := viper.UnmarshalKey("invoiceDirectory", &config.InvoiceDirectory); err != nil {
+	if err := viper.UnmarshalKey("invoiceDirectory", &config.Config.InvoiceDirectory); err != nil {
 		return err
 	}
-	if err := viper.UnmarshalKey("font", &config.Font); err != nil {
+	if err := viper.UnmarshalKey("font", &config.Config); err != nil {
 		return err
 	}
 
@@ -210,9 +209,7 @@ func (m RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				cmds = append(cmds, cmd)
 			}
-		default:
 		}
-	default:
 	}
 
 	// second switch for moved out stuff

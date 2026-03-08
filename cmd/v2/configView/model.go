@@ -58,9 +58,9 @@ func New(config config.Config) ConfigModel {
 	}
 
 	return ConfigModel{
-		FontFamily:       config.Font.Family,
-		FontStyle:        config.Font.Style,
-		InvoiceDirectory: config.InvoiceDirectory,
+		FontFamily:       config.Config.Family,
+		FontStyle:        config.Config.Style,
+		InvoiceDirectory: config.Config.InvoiceDirectory,
 		keys:             keymap,
 	}
 }

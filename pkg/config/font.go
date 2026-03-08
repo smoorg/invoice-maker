@@ -1,9 +1,10 @@
 package config
 
 type FontCfg struct {
-	Family   string `yaml:"family"`
-	Style    string `yaml:"style"`
-	Filepath string `yaml:"filepath"`
+	Family           string `yaml:"family"`
+	Style            string `yaml:"style"`
+	Filepath         string `yaml:"filepath"`
+	InvoiceDirectory string `yaml:"invoiceDirectory"`
 }
 
 func (f *FontCfg) SetFamily(fontFamily string) {

@@ -20,7 +20,7 @@ func printInvoice(tui *types.TUI) (string, error) {
 
 	invContent, err := template.GetContent(inv)
 
-	fonts, err := font.FindFonts(tui.Config.Font.Family, tui.Config.Font.Style)
+	fonts, err := font.FindFonts(tui.Config.Config.Family, tui.Config.Config.Style)
 	if err != nil {
 		return "", err
 	}
@@ -28,7 +28,7 @@ func printInvoice(tui *types.TUI) (string, error) {
 	if len(fonts) == 0 {
 		errMsg := fmt.Sprint(
 			"font from the config could not be found in the system, font-family: ",
-			tui.Config.Font.Family, "font-style: ", tui.Config.Font.Style)
+			tui.Config.Config.Family, "font-style: ", tui.Config.Config.Style)
 		return "", errors.New(errMsg)
 	}
 
@@ -51,7 +51,7 @@ func printInvoice(tui *types.TUI) (string, error) {
 
 	pdf.InitializePdf("")
 
-	if err := pdf.SetFont(tui.Config.Font.Family, tui.Config.Font.Style, tui.Config.Font.Filepath, 8); err != nil {
+	if err := pdf.SetFont(tui.Config.Config.Family, tui.Config.Config.Style, tui.Config.Config.Filepath, 8); err != nil {
 		return "", err
 	}
 
