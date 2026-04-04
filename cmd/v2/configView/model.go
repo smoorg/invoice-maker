@@ -1,14 +1,18 @@
 package configview
 
 import (
+	"log"
+	"strings"
+
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
+	tea "github.com/charmbracelet/bubbletea"
+
 	labelinput "invoice-maker/cmd/v2/controls/label_input"
 	"invoice-maker/pkg"
 	"invoice-maker/pkg/config"
-	"strings"
-
-	"github.com/charmbracelet/bubbles/key"
-	tea "github.com/charmbracelet/bubbletea"
-	"log"
+	"invoice-maker/pkg/font"
+	pkg_help "invoice-maker/pkg/help"
 )
 
 type FocID int
@@ -47,6 +51,24 @@ func New(config config.Config) ConfigModel {
 
 	family := labelinput.New("Font Family")
 	family.Input.SetValue(config.Config.Family)
+	family.Focus()
+	family.SetValidation(func(val string) (bool, string) {
+		fonts, err := font.GetFontFamilies()
+		if err != nil {
+			return false, "unable to get fonts"
+		}
+
+		if val == "" {
+			return false, "Font Family has to be set!"
+		}
+
+		fontExists := font.HasFontFamily(fonts, val)
+		if !fontExists {
+			return false, "No such font!"
+		}
+
+		return true, ""
+	})
 
 	//style := labelinput.New("Font Style")
 	//style.Input.SetValue(config.Config.Style)
@@ -56,7 +78,6 @@ func New(config config.Config) ConfigModel {
 
 	//inputs = append(inputs, family, style, dir)
 	inputs = append(inputs, &family, &dir)
-	inputs[0].Focus()
 
 	keymap := keyMap{
 		NextField: key.NewBinding(
