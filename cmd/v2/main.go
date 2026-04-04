@@ -2,13 +2,26 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"invoice-maker/cmd/v2/root"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
+	err := os.Remove("logs.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.SetOutput(file)
+	log.Println("This log message will be written to the file.")
+
 	m := root.NewRootModel()
 
 	p := tea.NewProgram(m, tea.WithAltScreen())
