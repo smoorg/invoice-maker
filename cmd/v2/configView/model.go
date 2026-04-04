@@ -1,22 +1,31 @@
 package configview
 
 import (
+	labelinput "invoice-maker/cmd/v2/controls/label_input"
 	"invoice-maker/pkg"
 	"invoice-maker/pkg/config"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/key"
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"log"
 )
 
+type FocID int
+
+func (m *ConfigModel) Increment() {
+	if m.focID >= (len(m.inputs) - 1) {
+		m.focID = 0
+	} else {
+		m.focID++
+	}
+}
+
 type ConfigModel struct {
-	InvoiceDirectory string
-	FontFamily       string
-	FontStyle        string
-	keys             keyMap
-	inputs           []textinput.Model
-	focusedInput     int
+	FontConfig config.FontCfg
+	keys       keyMap
+	inputs     []*labelinput.Model
+	focID      int
 }
 
 func (m ConfigModel) SetSize(width int, height int) {
@@ -34,12 +43,20 @@ const (
 )
 
 func New(config config.Config) ConfigModel {
-	//inputs := make([]textinput.Model, 3)
-	//inputs[InputFontStyle] = textinput.New()
-	//inputs[InputFontStyle].Placeholder = "Font Style"
-	//inputs[InputFontStyle].CharLimit = 40
-	//inputs[InputFontFamily] = textinput.Model{Placeholder: "Font Family"}
-	//inputs[InputDirectory] = textinput.Model{Placeholder: "Config directory"}
+	inputs := make([]*labelinput.Model, 0, 3)
+
+	family := labelinput.New("Font Family")
+	family.Input.SetValue(config.Config.Family)
+
+	//style := labelinput.New("Font Style")
+	//style.Input.SetValue(config.Config.Style)
+
+	dir := labelinput.New("Invoice Directory")
+	dir.Input.SetValue(config.Config.InvoiceDirectory)
+
+	//inputs = append(inputs, family, style, dir)
+	inputs = append(inputs, &family, &dir)
+	inputs[0].Focus()
 
 	keymap := keyMap{
 		NextField: key.NewBinding(
@@ -48,54 +65,63 @@ func New(config config.Config) ConfigModel {
 		),
 		Back: key.NewBinding(
 			key.WithKeys(
-				tea.KeyCtrlQ.String(),
-				tea.KeyCtrlC.String(),
-				tea.KeyCtrlD.String(),
-				"q",
+				tea.KeyEsc.String(),
 			),
-			key.WithHelp("tab", "select next field"),
+			key.WithHelp("esc", "go back"),
 		),
 	}
 
 	return ConfigModel{
-		FontFamily:       config.Config.Family,
-		FontStyle:        config.Config.Style,
-		InvoiceDirectory: config.Config.InvoiceDirectory,
-		keys:             keymap,
+		FontConfig: config.Config,
+		keys:       keymap,
+		inputs:     inputs,
 	}
 }
 
 func (m ConfigModel) Init() tea.Cmd {
-	return m.inputs[InputFontStyle].Focus()
+	return nil
+}
+
+func (m *ConfigModel) SwitchInput() tea.Cmd {
+	m.inputs[m.focID].Blur()
+	m.Increment()
+	return m.inputs[m.focID].Focus()
 }
 
 func (m ConfigModel) Update(msg tea.Msg) (ConfigModel, tea.Cmd) {
+	var cmds []tea.Cmd
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		log.Println("updating config model", msg.String())
 		switch {
 		case key.Matches(msg, m.keys.NextField):
+			log.Println("updating config next field", m.focID)
+			cmd = m.SwitchInput()
+			cmds = append(cmds, cmd)
 		case key.Matches(msg, m.keys.Back):
+			m.inputs[m.focID].Blur()
 			cmd = pkg.GoMain()
+			cmds = append(cmds, cmd)
+		default:
 		}
 	}
-	return m, cmd
+	for _, input := range m.inputs {
+		*input, cmd = input.Update(msg)
+		cmds = append(cmds, cmd)
+	}
+	return m, tea.Batch(cmds...)
 }
 
 func (m ConfigModel) View() string {
 	b := strings.Builder{}
-	b.WriteString("Family: ")
-	b.WriteString(m.FontFamily)
-	b.WriteString("\n")
+	const nl string = "\n"
 
-	b.WriteString("Style: ")
-	b.WriteString(m.FontStyle)
-	b.WriteString("\n")
-
-	b.WriteString("Invoice' Directory: ")
-	b.WriteString(m.InvoiceDirectory)
-	b.WriteString("\n")
+	for _, v := range m.inputs {
+		b.WriteString(v.View())
+		b.WriteString(nl)
+	}
 
 	return b.String()
 }
