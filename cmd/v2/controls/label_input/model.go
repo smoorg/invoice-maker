@@ -19,6 +19,11 @@ type Model struct {
 
 func (m *Model) Blur() {
 	m.Input.Blur()
+	m.Input.TextStyle = greyedOut
+}
+
+func (m Model) Focused() bool {
+	return m.Input.Focused()
 }
 
 func New(label string) Model {
@@ -39,6 +44,7 @@ func (m *Model) SetValidation(isValid func(val string) (bool, string)) {
 }
 
 func (m *Model) Focus() tea.Cmd {
+	m.Input.TextStyle = modifyInput
 	return m.Input.Focus()
 }
 

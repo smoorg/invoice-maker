@@ -2,6 +2,7 @@ package configview
 
 import (
 	"log"
+	"slices"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -9,27 +10,25 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 
 	labelinput "invoice-maker/cmd/v2/controls/label_input"
+	singleselect "invoice-maker/cmd/v2/controls/single_select"
 	"invoice-maker/pkg"
 	"invoice-maker/pkg/config"
 	"invoice-maker/pkg/font"
 	pkg_help "invoice-maker/pkg/help"
 )
 
-type FocID int
-
-func (m *ConfigModel) Increment() {
-	if m.focID >= (len(m.inputs) - 1) {
-		m.focID = 0
-	} else {
-		m.focID++
-	}
-}
+const (
+	InputFontFamily = iota
+	InputInvoiceDir
+)
 
 type ConfigModel struct {
-	FontConfig config.FontCfg
-	keys       keyMap
-	inputs     []*labelinput.Model
-	focID      int
+	FontConfig       config.FontCfg
+	keys             keyMap
+	focusID          int
+	helpContent      string
+	FontFamily       singleselect.Model
+	InvoiceDirectory labelinput.Model
 }
 
 func (m ConfigModel) SetSize(width int, height int) {
@@ -40,44 +39,34 @@ type keyMap struct {
 	Back      key.Binding
 }
 
-const (
-	InputFontStyle int = iota
-	InputFontFamily
-	InputDirectory
-)
+func New(cfg config.Config) ConfigModel {
+	// Build font family select items
+	fontFamilies, err := font.GetFontFamilies()
+	if err != nil {
+		fontFamilies = []string{}
+	}
 
-func New(config config.Config) ConfigModel {
-	inputs := make([]*labelinput.Model, 0, 3)
+	// Move current font to top of list
+	currentIdx := slices.Index(fontFamilies, cfg.Config.Family)
+	log.Printf("Font from config: %q, found at index: %d", cfg.Config.Family, currentIdx)
+	if currentIdx > 0 {
+		current := fontFamilies[currentIdx]
+		fontFamilies = slices.Delete(fontFamilies, currentIdx, currentIdx+1)
+		fontFamilies = slices.Insert(fontFamilies, 0, current)
+	}
+	log.Printf("First font in list after reorder: %q", fontFamilies[0])
 
-	family := labelinput.New("Font Family")
-	family.Input.SetValue(config.Config.Family)
-	family.Focus()
-	family.SetValidation(func(val string) (bool, string) {
-		if val == "" {
-			return false, "Font Family has to be set!"
-		}
+	items := make([]singleselect.Item, len(fontFamilies))
+	for i, f := range fontFamilies {
+		items[i] = singleselect.Item{Label: f, Value: f}
+	}
 
-		fonts, err := font.GetFontFamilies()
-		if err != nil {
-			return false, "Unable to get fonts"
-		}
+	fontFamily := singleselect.New("Font Family", items)
+	fontFamily.Focus()
 
-		fontExists := font.HasFontFamily(fonts, val)
-		if !fontExists {
-			return false, "No such font!"
-		}
-
-		return true, ""
-	})
-
-	//style := labelinput.New("Font Style")
-	//style.Input.SetValue(config.Config.Style)
-
-	dir := labelinput.New("Invoice Directory")
-	dir.Input.SetValue(config.Config.InvoiceDirectory)
-
-	//inputs = append(inputs, family, style, dir)
-	inputs = append(inputs, &family, &dir)
+	// Invoice directory input
+	invoiceDir := labelinput.New("Invoice Directory")
+	invoiceDir.Input.SetValue(cfg.Config.InvoiceDirectory)
 
 	keymap := keyMap{
 		NextField: key.NewBinding(
@@ -85,28 +74,26 @@ func New(config config.Config) ConfigModel {
 			key.WithHelp("tab", "select next field"),
 		),
 		Back: key.NewBinding(
-			key.WithKeys(
-				tea.KeyEsc.String(),
-			),
+			key.WithKeys(tea.KeyEsc.String()),
 			key.WithHelp("esc", "go back"),
 		),
 	}
 
+	helpBubble := help.New()
+	helpView := helpBubble.ShortHelpView(pkg_help.MapToBindingsList(keymap))
+
 	return ConfigModel{
-		FontConfig: config.Config,
-		keys:       keymap,
-		inputs:     inputs,
+		FontConfig:       cfg.Config,
+		keys:             keymap,
+		focusID:          InputFontFamily,
+		helpContent:      helpView,
+		FontFamily:       fontFamily,
+		InvoiceDirectory: invoiceDir,
 	}
 }
 
 func (m ConfigModel) Init() tea.Cmd {
 	return nil
-}
-
-func (m *ConfigModel) SwitchInput() tea.Cmd {
-	m.inputs[m.focID].Blur()
-	m.Increment()
-	return m.inputs[m.focID].Focus()
 }
 
 func (m ConfigModel) Update(msg tea.Msg) (ConfigModel, tea.Cmd) {
@@ -118,31 +105,42 @@ func (m ConfigModel) Update(msg tea.Msg) (ConfigModel, tea.Cmd) {
 		log.Println("updating config model", msg.String())
 		switch {
 		case key.Matches(msg, m.keys.NextField):
-			log.Println("updating config next field", m.focID)
-			cmd = m.SwitchInput()
-			cmds = append(cmds, cmd)
+			log.Println("updating config next field", m.focusID)
+			switch m.focusID {
+			case 0:
+				m.focusID++
+				m.FontFamily.Blur()
+				cmd = m.InvoiceDirectory.Focus()
+				cmds = append(cmds, cmd)
+			case 1:
+				m.focusID = 0
+				m.InvoiceDirectory.Blur()
+				cmd = m.FontFamily.Focus()
+				cmds = append(cmds, cmd)
+			default:
+			}
 		case key.Matches(msg, m.keys.Back):
-			m.inputs[m.focID].Blur()
 			cmd = pkg.GoMain()
 			cmds = append(cmds, cmd)
-		default:
+			return m, tea.Batch(cmds...)
 		}
 	}
-	for _, input := range m.inputs {
-		*input, cmd = input.Update(msg)
-		cmds = append(cmds, cmd)
-	}
+
+	m.FontFamily, cmd = m.FontFamily.Update(msg)
+	cmds = append(cmds, cmd)
+	m.InvoiceDirectory, cmd = m.InvoiceDirectory.Update(msg)
+	cmds = append(cmds, cmd)
+
 	return m, tea.Batch(cmds...)
 }
 
 func (m ConfigModel) View() string {
 	b := strings.Builder{}
-	const nl string = "\n"
 
-	for _, v := range m.inputs {
-		b.WriteString(v.View())
-		b.WriteString(nl)
-	}
+	b.WriteString(m.FontFamily.View())
+	b.WriteString("\n")
+	b.WriteString(m.InvoiceDirectory.View())
+	b.WriteString("\n")
 
 	return b.String()
 }
