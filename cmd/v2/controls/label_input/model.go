@@ -1,7 +1,7 @@
 package labelinput
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,8 +24,8 @@ func (m *Model) Blur() {
 func New(label string) Model {
 	i := textinput.New()
 	i.Width = 80
-	i.TextStyle = gray
-	i.PromptStyle = gray
+	i.TextStyle = greyedOut
+	i.PromptStyle = greyedOut
 
 	return Model{
 		label:   label,
@@ -52,32 +52,38 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	m.valid, m.errMsg = m.isValid(m.Input.Value())
-	if m.valid {
-		if m.Input.Focused() {
-			m.Input.TextStyle = purple
-		} else {
-			m.Input.TextStyle = gray
-		}
+	if m.Input.Focused() {
+		m.Input.TextStyle = modifyInput
 	} else {
-		m.Input.TextStyle = invalid
-		m.errMsg = invalid.Render(m.errMsg)
+		m.Input.TextStyle = greyedOut
 	}
 
 	return m, tea.Batch(cmds...)
 }
 
-var gray = lipgloss.NewStyle().Foreground(lipgloss.Color("#555")).Background(lipgloss.Color("#333"))
-var purple = lipgloss.NewStyle().Foreground(lipgloss.Color("#fff")).Background(lipgloss.Color("#333"))
-var invalid = lipgloss.NewStyle().Foreground(lipgloss.Color("#F54927"))
+var bg = lipgloss.Color("#333")
+var red = lipgloss.Color("#F54927")
+var white = lipgloss.Color("#fff")
+var grey = lipgloss.Color("#555")
+
+var greyedOut = lipgloss.NewStyle().Foreground(grey).Background(bg)
+var modifyInput = lipgloss.NewStyle().Foreground(white).Background(bg)
+var invalidInput = lipgloss.NewStyle().Foreground(red)
 
 func (m Model) View() string {
-	cursor := m.Input.Cursor.View()
+	b := strings.Builder{}
+	b.WriteString(m.label)
+	b.WriteString(":\n")
+	b.WriteString(m.Input.View())
 
-	return fmt.Sprintf("%s:\n%s%s\n%s",
-		m.label,
-		m.Input.View(),
-		cursor,
-		m.errMsg,
-	)
-	//return m.Input.View()
+	if m.Input.Focused() {
+		b.WriteString(m.Input.Cursor.View())
+	}
+
+	if m.errMsg != "" {
+		b.WriteString("\n")
+		b.WriteString(invalidInput.Render(m.errMsg))
+	}
+
+	return b.String()
 }

@@ -53,13 +53,13 @@ func New(config config.Config) ConfigModel {
 	family.Input.SetValue(config.Config.Family)
 	family.Focus()
 	family.SetValidation(func(val string) (bool, string) {
-		fonts, err := font.GetFontFamilies()
-		if err != nil {
-			return false, "unable to get fonts"
-		}
-
 		if val == "" {
 			return false, "Font Family has to be set!"
+		}
+
+		fonts, err := font.GetFontFamilies()
+		if err != nil {
+			return false, "Unable to get fonts"
 		}
 
 		fontExists := font.HasFontFamily(fonts, val)
