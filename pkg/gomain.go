@@ -21,7 +21,6 @@ func GoMain() tea.Cmd {
 	return func() tea.Msg {
 		return JumpMainView{}
 	}
-
 }
 func GoInvoicePreview() tea.Cmd {
 	return func() tea.Msg {

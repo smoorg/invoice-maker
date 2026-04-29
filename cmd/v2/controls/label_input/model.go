@@ -31,6 +31,7 @@ func New(label string) Model {
 	i.Width = 80
 	i.TextStyle = greyedOut
 	i.PromptStyle = greyedOut
+	i.Prompt = ""
 
 	return Model{
 		label:   label,
@@ -79,7 +80,7 @@ var invalidInput = lipgloss.NewStyle().Foreground(red)
 func (m Model) View() string {
 	b := strings.Builder{}
 	b.WriteString(m.label)
-	b.WriteString(":\n")
+	b.WriteString(": ")
 	b.WriteString(m.Input.View())
 
 	if m.Input.Focused() {

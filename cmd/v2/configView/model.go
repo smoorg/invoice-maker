@@ -74,8 +74,8 @@ func New(cfg config.Config) ConfigModel {
 			key.WithHelp("tab", "select next field"),
 		),
 		Back: key.NewBinding(
-			key.WithKeys(tea.KeyEsc.String()),
-			key.WithHelp("esc", "go back"),
+			key.WithKeys(tea.KeyEsc.String(), "h"),
+			key.WithHelp("Escape/h", "go back"),
 		),
 	}
 
@@ -115,21 +115,24 @@ func (m ConfigModel) Update(msg tea.Msg) (ConfigModel, tea.Cmd) {
 			case 1:
 				m.focusID = 0
 				m.InvoiceDirectory.Blur()
-				cmd = m.FontFamily.Focus()
-				cmds = append(cmds, cmd)
+				m.FontFamily.Focus()
 			default:
 			}
 		case key.Matches(msg, m.keys.Back):
-			cmd = pkg.GoMain()
-			cmds = append(cmds, cmd)
-			return m, tea.Batch(cmds...)
+			// TODO: think of a better way to avoid key event fallback
+			// I wanted to avoid triggering esc event when we have
+			// not picked anything with select.
+			if !m.FontFamily.Focused() {
+				cmd = pkg.GoMain()
+				cmds = append(cmds, cmd)
+			}
 		}
 	}
-
 	m.FontFamily, cmd = m.FontFamily.Update(msg)
 	cmds = append(cmds, cmd)
 	m.InvoiceDirectory, cmd = m.InvoiceDirectory.Update(msg)
 	cmds = append(cmds, cmd)
+
 
 	return m, tea.Batch(cmds...)
 }

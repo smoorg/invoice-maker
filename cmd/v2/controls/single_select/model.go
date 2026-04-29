@@ -29,9 +29,10 @@ type Model struct {
 }
 
 func New(label string, items []Item) Model {
-	filter := textinput.New()
-	filter.Placeholder = "Type to filter..."
-	filter.Width = 30
+	f := textinput.New()
+	f.Placeholder = "Type to filter..."
+	f.Prompt = ""
+	f.Width = 80
 
 	// Initialize filtered to all items
 	filtered := make([]int, len(items))
@@ -48,7 +49,7 @@ func New(label string, items []Item) Model {
 		expanded:   false,
 		focused:    false,
 		maxVisible: 10,
-		filter:     filter,
+		filter:     f,
 	}
 }
 
@@ -58,41 +59,18 @@ func (m *Model) SetMaxVisible(n int) {
 
 func (m *Model) Focus() tea.Cmd {
 	m.focused = true
-	return nil
+	return m.filter.Focus()
+}
+
+func (m *Model) Focused() bool {
+	return m.filter.Focused() && m.focused && m.expanded
 }
 
 func (m *Model) Blur() {
 	m.focused = false
 	m.expanded = false
 	m.filter.Blur()
-	m.filter.SetValue("")
 	m.applyFilter()
-}
-
-func (m Model) Focused() bool {
-	return m.focused
-}
-
-func (m Model) Expanded() bool {
-	return m.expanded
-}
-
-func (m Model) Selected() Item {
-	if len(m.items) == 0 {
-		return Item{}
-	}
-	return m.items[m.selected]
-}
-
-func (m Model) SelectedIndex() int {
-	return m.selected
-}
-
-func (m *Model) SetSelected(index int) {
-	if index >= 0 && index < len(m.items) {
-		m.selected = index
-		m.cursor = 0
-	}
 }
 
 // itemLabels implements fuzzy.Source for fuzzy matching
@@ -135,6 +113,7 @@ type keyMap struct {
 	Confirm key.Binding
 	Cancel  key.Binding
 	Toggle  key.Binding
+	Exit    key.Binding
 }
 
 var keys = keyMap{
@@ -148,11 +127,19 @@ var keys = keyMap{
 		key.WithKeys("enter"),
 	),
 	Cancel: key.NewBinding(
-		key.WithKeys("esc"),
+		key.WithKeys(tea.KeyEsc.String()),
 	),
 	Toggle: key.NewBinding(
 		key.WithKeys(" "),
 	),
+}
+
+type BlurEvent struct{}
+
+func SendBlurEvent() tea.Cmd {
+	return func() tea.Msg {
+		return BlurEvent{}
+	}
 }
 
 func (m Model) Init() tea.Cmd {
@@ -167,6 +154,13 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
+	case BlurEvent:
+		if m.expanded {
+			m.expanded = false
+			m.filter.Blur()
+			m.applyFilter()
+		}
+		return m, cmd
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, keys.Up):
@@ -207,16 +201,13 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 				m.expanded = true
 				m.filter.Focus()
 				m.cursor = 0
-				return m, nil
+				return m, cmd
 			}
 		case key.Matches(msg, keys.Cancel):
-			if m.expanded {
-				m.expanded = false
-				m.filter.Blur()
-				m.filter.SetValue("")
-				m.applyFilter()
+			if m.focused && m.Focused() {
+				cmd = SendBlurEvent()
+				return m, cmd
 			}
-			return m, nil
 		}
 	}
 
@@ -238,7 +229,7 @@ var (
 	white = lipgloss.Color("#fff")
 	grey  = lipgloss.Color("#555")
 
-	labelStyle = lipgloss.NewStyle().Foreground(white)
+	labelStyle       = lipgloss.NewStyle().Foreground(white)
 	selectedStyle    = lipgloss.NewStyle().Foreground(white).Background(bg)
 	itemStyle        = lipgloss.NewStyle().Foreground(grey)
 	cursorStyle      = lipgloss.NewStyle().Foreground(white).Background(lipgloss.Color("#555"))
@@ -253,7 +244,7 @@ func (m Model) View() string {
 
 	// Label
 	b.WriteString(labelStyle.Render(m.label))
-	b.WriteString(":\n")
+	b.WriteString(": ")
 
 	if len(m.items) == 0 {
 		b.WriteString(itemStyle.Render("(no items)"))
@@ -327,10 +318,7 @@ func (m Model) visibleRange() (start, end int) {
 
 	// Center the cursor in the visible window
 	half := m.maxVisible / 2
-	start = m.cursor - half
-	if start < 0 {
-		start = 0
-	}
+	start = max(m.cursor-half, 0)
 
 	end = start + m.maxVisible
 	if end > total {
