@@ -9,8 +9,9 @@ import (
 )
 
 type Model struct {
-	label string
-	Input textinput.Model
+	label      string
+	labelLimit int
+	Input      textinput.Model
 
 	isValid func(v string) (bool, string)
 	valid   bool
@@ -26,7 +27,7 @@ func (m Model) Focused() bool {
 	return m.Input.Focused()
 }
 
-func New(label string) Model {
+func New(label string, limit int) Model {
 	i := textinput.New()
 	i.Width = 80
 	i.TextStyle = greyedOut
@@ -34,9 +35,12 @@ func New(label string) Model {
 	i.Prompt = ""
 
 	return Model{
-		label:   label,
-		Input:   i,
-		isValid: func(v string) (bool, string) { return true, "" },
+		label:      label,
+		labelLimit: limit,
+		Input:      i,
+		isValid:    func(v string) (bool, string) { return true, "" },
+		valid:      false,
+		errMsg:     "",
 	}
 }
 
@@ -80,6 +84,12 @@ var invalidInput = lipgloss.NewStyle().Foreground(red)
 func (m Model) View() string {
 	b := strings.Builder{}
 	b.WriteString(m.label)
+
+	limitLeft := m.labelLimit - len(m.label)
+	for range limitLeft {
+		b.WriteString(" ")
+	}
+
 	b.WriteString(": ")
 	b.WriteString(m.Input.View())
 

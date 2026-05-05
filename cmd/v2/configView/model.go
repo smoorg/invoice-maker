@@ -36,6 +36,7 @@ func (m ConfigModel) SetSize(width int, height int) {
 
 type keyMap struct {
 	NextField key.Binding
+	Esc       key.Binding
 	Back      key.Binding
 }
 
@@ -61,11 +62,10 @@ func New(cfg config.Config) ConfigModel {
 		items[i] = singleselect.Item{Label: f, Value: f}
 	}
 
-	fontFamily := singleselect.New("Font Family", items)
-	fontFamily.Focus()
+	fontFamily := singleselect.New("Font Family", 20, items)
 
 	// Invoice directory input
-	invoiceDir := labelinput.New("Invoice Directory")
+	invoiceDir := labelinput.New("Invoice Directory", 20)
 	invoiceDir.Input.SetValue(cfg.Config.InvoiceDirectory)
 
 	keymap := keyMap{
@@ -73,9 +73,13 @@ func New(cfg config.Config) ConfigModel {
 			key.WithKeys(tea.KeyTab.String()),
 			key.WithHelp("tab", "select next field"),
 		),
+		Esc: key.NewBinding(
+			key.WithKeys(tea.KeyEsc.String()),
+			key.WithHelp("Esc", "blur focus"),
+		),
 		Back: key.NewBinding(
-			key.WithKeys(tea.KeyEsc.String(), "h"),
-			key.WithHelp("Escape/h", "go back"),
+			key.WithKeys("h"),
+			key.WithHelp("h", "go to main view (when nothing focused)"),
 		),
 	}
 
@@ -108,23 +112,32 @@ func (m ConfigModel) Update(msg tea.Msg) (ConfigModel, tea.Cmd) {
 			log.Println("updating config next field", m.focusID)
 			switch m.focusID {
 			case 0:
+				m.FontFamily.Focus()
+				m.focusID++
+			case 1:
 				m.focusID++
 				m.FontFamily.Blur()
 				cmd = m.InvoiceDirectory.Focus()
 				cmds = append(cmds, cmd)
-			case 1:
-				m.focusID = 0
+			case 2:
 				m.InvoiceDirectory.Blur()
-				m.FontFamily.Focus()
+
+				// last field, goes back to nothing
+				m.focusID = 0
 			default:
 			}
+			case key.Matches(msg, m.keys.Esc):
+				m.focusID = 0
+				m.FontFamily.Blur()
+				m.InvoiceDirectory.Blur()
 		case key.Matches(msg, m.keys.Back):
 			// TODO: think of a better way to avoid key event fallback
 			// I wanted to avoid triggering esc event when we have
 			// not picked anything with select.
-			if !m.FontFamily.Focused() {
+			if m.focusID == 0 {
 				cmd = pkg.GoMain()
 				cmds = append(cmds, cmd)
+				return m, tea.Batch(cmds...)
 			}
 		}
 	}
@@ -133,7 +146,6 @@ func (m ConfigModel) Update(msg tea.Msg) (ConfigModel, tea.Cmd) {
 	m.InvoiceDirectory, cmd = m.InvoiceDirectory.Update(msg)
 	cmds = append(cmds, cmd)
 
-
 	return m, tea.Batch(cmds...)
 }
 
@@ -141,9 +153,9 @@ func (m ConfigModel) View() string {
 	b := strings.Builder{}
 
 	b.WriteString(m.FontFamily.View())
-	b.WriteString("\n")
+	b.WriteString("\n\n")
 	b.WriteString(m.InvoiceDirectory.View())
-	b.WriteString("\n")
+	b.WriteString("\n\n")
 
 	return b.String()
 }

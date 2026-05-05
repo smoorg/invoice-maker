@@ -17,6 +17,7 @@ type Item struct {
 
 type Model struct {
 	label      string
+	labelLimit int
 	items      []Item
 	filtered   []int // indices into items that match filter
 	cursor     int   // position in filtered list
@@ -28,7 +29,7 @@ type Model struct {
 	filter textinput.Model
 }
 
-func New(label string, items []Item) Model {
+func New(label string, limit int, items []Item) Model {
 	f := textinput.New()
 	f.Placeholder = "Type to filter..."
 	f.Prompt = ""
@@ -42,6 +43,7 @@ func New(label string, items []Item) Model {
 
 	return Model{
 		label:      label,
+		labelLimit: limit,
 		items:      items,
 		filtered:   filtered,
 		cursor:     0,
@@ -244,6 +246,10 @@ func (m Model) View() string {
 
 	// Label
 	b.WriteString(labelStyle.Render(m.label))
+	lettersLeft := m.labelLimit - len(m.label)
+	for range lettersLeft {
+		b.WriteString(" ")
+	}
 	b.WriteString(": ")
 
 	if len(m.items) == 0 {
