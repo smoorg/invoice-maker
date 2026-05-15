@@ -247,41 +247,6 @@ func (m InvoicesModel) View() string {
 		}
 		content = fmt.Sprintf("Your invoice got print at:\n%s", m.printPath)
 
-		buttonStyle := lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFF7DB")).
-			Background(lipgloss.Color("#888B7E")).
-			Padding(0, 3).
-			MarginTop(1)
-
-		activeButtonStyle := buttonStyle.
-			Foreground(lipgloss.Color("#FFF7DB")).
-			Background(lipgloss.Color("#F25D94")).
-			MarginRight(2).
-			Underline(true)
-		//normal := lipgloss.Color("#EEEEEE")
-		question := lipgloss.NewStyle().Width(50).Align(lipgloss.Center).Render(content)
-		okButton := activeButtonStyle.Render("Yes")
-		cancelButton := buttonStyle.Render("Maybe")
-		buttons := lipgloss.JoinHorizontal(lipgloss.Top, okButton, cancelButton)
-		subtle := lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
-		dialogBoxStyle := lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#874BFD")).
-			Padding(1, 0).
-			BorderTop(true).
-			BorderLeft(true).
-			BorderRight(true).
-			BorderBottom(true)
-		ui := lipgloss.JoinVertical(lipgloss.Center, question, buttons)
-
-		//base := lipgloss.NewStyle().Foreground(normal)
-		dialog := lipgloss.Place(150, 9,
-			lipgloss.Center, lipgloss.Center,
-			dialogBoxStyle.Render(ui),
-			lipgloss.WithWhitespaceChars("猫咪"),
-			lipgloss.WithWhitespaceForeground(subtle),
-		)
-		content = dialog
 	case ViewMain:
 		availHeight := m.flex.GetHeight()
 		availHeight -= lipgloss.Height(m.helpContent)
