@@ -29,6 +29,14 @@ type Model struct {
 	filter textinput.Model
 }
 
+func (m *Model) SetValue(v string) {
+	for i, item := range m.items {
+		if item.Value == v {
+			m.selected = i
+		}
+	}
+}
+
 func New(label string, limit int, items []Item) Model {
 	f := textinput.New()
 	f.Placeholder = "Type to filter..."

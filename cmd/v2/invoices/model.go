@@ -32,6 +32,7 @@ const (
 	ViewMain InvoiceView = iota
 	ViewPreview
 	ViewPrint
+	ViewEdit
 )
 
 type KeyMap struct {
@@ -46,6 +47,7 @@ type KeyMap struct {
 type InvoicesModel struct {
 	invoices  []config.Invoice `yaml:"invoices"`
 	invoice   InvoicePreviewModel
+	edit      InvoiceEditModel
 	directory string
 	font      config.FontCfg
 
@@ -100,6 +102,7 @@ func New(config config.Config) InvoicesModel {
 	m.flex.AddColumns(columns)
 	m.directory = config.Config.InvoiceDirectory
 	m.font = config.Config
+	m.edit = NewEditModel()
 
 	m.keys = KeyMap{
 		Up: key.NewBinding(
@@ -160,6 +163,16 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 		m.table.SetHeight(msg.Height)
 		m.flex.SetWidth(msg.Width)
 		m.flex.SetHeight(msg.Height)
+	case pkg.JumpInvoiceEdit:
+		m.view = ViewEdit
+
+		picked := m.table.SelectedRow()
+		inv, _, err := getInvoice(m.invoices, picked[2], picked[4])
+		if err != nil {
+			panic(err)
+		}
+		m.edit.invoice = inv
+
 	case pkg.JumpInvoicePreview:
 		m.view = ViewPreview
 	case tea.KeyMsg:
@@ -188,6 +201,9 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 			case ViewMain:
 				cmd = pkg.GoInvoicePreview()
 				cmds = append(cmds, cmd)
+			case ViewPreview:
+				cmd = pkg.GoInvoiceEdit()
+				cmds = append(cmds, cmd)
 			}
 		case key.Matches(msg, m.keys.Print):
 			m.view = ViewPrint
@@ -208,14 +224,17 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 			}(m.printPath)
 			return m, pkg.GoInvoicePreview()
 		case key.Matches(msg, m.keys.Edit):
-			// TODO: implement
-			panic("unimplemented")
+			m.view = ViewEdit
 		}
 	}
 
 	switch m.view {
+	case ViewEdit:
+		m.edit, cmd = m.edit.Update(msg)
+		cmds = append(cmds, cmd)
 	case ViewPreview:
-		m.invoice.Update(msg)
+		m.invoice, cmd = m.invoice.Update(msg)
+		cmds = append(cmds, cmd)
 	case ViewMain:
 		m.table, cmd = m.table.Update(msg)
 		cmds = append(cmds, cmd)
@@ -228,6 +247,7 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 		for _, v := range m.invoices {
 			if v.InvoiceNo == picked[2] && v.NetSum() == picked[4] {
 				m.invoice.SetInvoice(v)
+				m.edit.SetInvoice(&v)
 			}
 		}
 	case ViewPrint:
@@ -240,6 +260,8 @@ func (m InvoicesModel) View() string {
 	switch m.view {
 	case ViewPreview:
 		return m.invoice.View()
+	case ViewEdit:
+		return m.edit.View()
 	case ViewPrint:
 		if m.printPath == "" {
 			return "Missing invoice print path..."
@@ -315,4 +337,3 @@ func (m *InvoicesModel) printInvoice(invContent string) string {
 	}
 	return path
 }
-

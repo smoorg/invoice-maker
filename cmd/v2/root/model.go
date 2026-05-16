@@ -19,7 +19,6 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/spf13/viper"
 )
 
 type SwitchViewEvent struct {
@@ -84,8 +83,8 @@ func NewRootModel() RootModel {
 	}
 	m.invoiceModel.SetConfig(m.config)
 	m.invoiceModel.SetRows(rows)
-	m.receivers.SetConfig(m.config.Receivers)
 
+	m.receivers.SetConfig(m.config.Receivers)
 
 	m.keys = keymap{
 		Quit: key.NewBinding(
@@ -114,34 +113,13 @@ func NewRootModel() RootModel {
 }
 
 // Initializes config from a file
-func setConfig(config *config.Config) error {
-	// viper
-	appname := "invoice-maker"
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("$HOME/.config/" + appname)
-
-	if err := viper.ReadInConfig(); err != nil {
-		return err
+func setConfig(v *config.Config) error {
+	cfg, err := config.GetConfig(v)
+	if err == nil {
+		v = cfg
 	}
 
-	if err := viper.UnmarshalKey("issuer", &config.Issuer); err != nil {
-		return err
-	}
-	if err := viper.UnmarshalKey("receivers", &config.Receivers); err != nil {
-		return err
-	}
-	if err := viper.UnmarshalKey("invoices", &config.Invoices); err != nil {
-		return err
-	}
-	if err := viper.UnmarshalKey("invoiceDirectory", &config.Config.InvoiceDirectory); err != nil {
-		return err
-	}
-	if err := viper.UnmarshalKey("font", &config.Config); err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 type keymap struct {

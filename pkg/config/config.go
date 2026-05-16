@@ -6,3 +6,4 @@ type Config struct {
 	Invoices  []Invoice `yaml:"invoices"`
 	Config    FontCfg   `yaml:"font"`
 }
+

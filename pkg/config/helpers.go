@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/spf13/viper"
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -74,28 +75,39 @@ func IsValidInvoiceDirectory(dir string) bool {
 	return true
 }
 
-func GetConfig() (*Config, error) {
-	cfg := &Config{}
-	dir, _ := GetConfigDir()
-	os.MkdirAll(dir, 0744)
-
-	configYaml, err := os.ReadFile(getConfigFile())
-	if err != nil {
-		file, fileCreateErr := os.Create(getConfigFile())
-		if fileCreateErr != nil {
-			return nil, errors.New("unable to create yaml config file")
-		}
-		defer file.Close()
-
-		_, err = file.Read(configYaml)
+func GetConfig(cfg *Config) (*Config, error) {
+	config := &Config{}
+	if cfg != nil {
+		config = cfg
 	}
 
-	marshalErr := yaml.Unmarshal(configYaml, &cfg)
-	if marshalErr != nil {
-		return nil, errors.New("Unable to parse config file")
+	// viper
+	appname := "invoice-maker"
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("$HOME/.config/" + appname)
+
+	if err := viper.ReadInConfig(); err != nil {
+		return nil, err
 	}
 
-	return cfg, nil
+	if err := viper.UnmarshalKey("issuer", &config.Issuer); err != nil {
+		return nil, err
+	}
+	if err := viper.UnmarshalKey("receivers", &config.Receivers); err != nil {
+		return nil, err
+	}
+	if err := viper.UnmarshalKey("invoices", &config.Invoices); err != nil {
+		return nil, err
+	}
+	if err := viper.UnmarshalKey("invoiceDirectory", &config.Config.InvoiceDirectory); err != nil {
+		return nil, err
+	}
+	if err := viper.UnmarshalKey("font", &config.Config); err != nil {
+		return nil, err
+	}
+
+	return config, nil
 }
 
 func (c *Config) WriteConfig() error {
@@ -109,7 +121,7 @@ func (c *Config) WriteConfig() error {
 		return errors.New("Unable to save config file")
 	}
 
-	conf, err := GetConfig()
+	conf, err := GetConfig(nil)
 	if err != nil {
 		return errors.New("Unable to get config file")
 	}

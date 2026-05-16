@@ -7,11 +7,12 @@ import (
 )
 
 type JumpMainView struct{}
-type JumpReceivers struct {}
+type JumpReceivers struct{}
 type JumpReceiverEdit struct {
 	Receiver config.Company
 }
 type JumpInvoicePreview struct{}
+type JumpInvoiceEdit struct {}
 
 type SetInvoiceRows struct {
 	Rows []config.Invoice
@@ -26,6 +27,10 @@ func GoInvoicePreview() tea.Cmd {
 	return func() tea.Msg {
 		return JumpInvoicePreview{}
 	}
+}
+
+func GoInvoiceEdit() tea.Cmd {
+	return func() tea.Msg { return JumpInvoiceEdit{} }
 }
 
 func GoReceivers() tea.Cmd {
