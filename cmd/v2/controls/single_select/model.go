@@ -29,6 +29,14 @@ type Model struct {
 	filter textinput.Model
 }
 
+func (m Model) Value() string {
+	if len(m.items) < m.selected || m.selected < 0 {
+		return ""
+	}
+
+	return m.items[m.selected].Value
+}
+
 func (m *Model) SetValue(v string) {
 	for i, item := range m.items {
 		if item.Value == v {

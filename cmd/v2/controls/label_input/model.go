@@ -13,9 +13,9 @@ type Model struct {
 	labelLimit int
 	Input      textinput.Model
 
-	isValid func(v string) (bool, string)
+	isValid func(v string) (bool, error)
 	valid   bool
-	errMsg  string
+	errMsg  error
 }
 
 func (m *Model) Blur() {
@@ -38,13 +38,13 @@ func New(label string, limit int) Model {
 		label:      label,
 		labelLimit: limit,
 		Input:      i,
-		isValid:    func(v string) (bool, string) { return true, "" },
+		isValid:    func(v string) (bool, error) { return true, nil },
 		valid:      false,
-		errMsg:     "",
+		errMsg:     nil,
 	}
 }
 
-func (m *Model) SetValidation(isValid func(val string) (bool, string)) {
+func (m *Model) SetValidation(isValid func(val string) (bool, error)) {
 	m.isValid = isValid
 }
 
@@ -63,6 +63,9 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	cmds = append(cmds, cmd)
 
 	m.valid, m.errMsg = m.isValid(m.Input.Value())
+	if m.errMsg != nil {
+		panic(m.errMsg)
+	}
 	if m.Input.Focused() {
 		m.Input.TextStyle = modifyInput
 	} else {
@@ -77,7 +80,7 @@ var red = lipgloss.Color("#F54927")
 var white = lipgloss.Color("#fff")
 var grey = lipgloss.Color("#555")
 
-var greyedOut = lipgloss.NewStyle().Foreground(grey).Background(bg)
+var greyedOut = lipgloss.NewStyle().Foreground(grey).Background(lipgloss.NoColor{})
 var modifyInput = lipgloss.NewStyle().Foreground(white).Background(bg)
 var invalidInput = lipgloss.NewStyle().Foreground(red)
 
@@ -97,9 +100,9 @@ func (m Model) View() string {
 		b.WriteString(m.Input.Cursor.View())
 	}
 
-	if m.errMsg != "" {
+	if m.errMsg != nil {
 		b.WriteString("\n")
-		b.WriteString(invalidInput.Render(m.errMsg))
+		b.WriteString(invalidInput.Render(m.errMsg.Error()))
 	}
 
 	return b.String()
