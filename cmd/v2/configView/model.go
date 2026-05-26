@@ -66,7 +66,7 @@ func New(cfg config.Config) ConfigModel {
 
 	// Invoice directory input
 	invoiceDir := labelinput.New("Invoice Directory", 20)
-	invoiceDir.Input.SetValue(cfg.Config.InvoiceDirectory)
+	invoiceDir.SetValue(cfg.Config.InvoiceDirectory)
 
 	keymap := keyMap{
 		NextField: key.NewBinding(

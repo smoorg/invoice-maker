@@ -48,10 +48,10 @@ type InvoiceEditModel struct {
 
 func (m *InvoiceEditModel) SetInvoiceModel(v *config.Invoice) {
 	m.invoice = v
-	m.InputInvoiceNo.Input.SetValue(v.InvoiceNo)
+	m.InputInvoiceNo.SetValue(v.InvoiceNo)
 	m.InputInvoiceDate.SetValue(v.InvoiceDate)
-	m.InputDeliveryDate.Input.SetValue(v.DeliveryDate)
-	m.InputDueDate.Input.SetValue(v.DueDate)
+	m.InputDeliveryDate.SetValue(v.DeliveryDate)
+	m.InputDueDate.SetValue(v.DueDate)
 	m.SelectReceiverName.SetValue(v.Receiver.Name)
 	m.SelectPaymentType.SetValue(v.PaymentType)
 	// m.Issuer.SetValue(v.Issuer.Name)
@@ -136,8 +136,8 @@ func (m InvoiceEditModel) Update(msg tea.Msg) (InvoiceEditModel, tea.Cmd) {
 	switch m.focus {
 	case FocusNone:
 	case FocusInvoiceNo:
-		// m.InputInvoiceNo, cmd = m.InputInvoiceNo.Update(msg)
-		// cmds = append(cmds, cmd)
+		m.InputInvoiceNo, cmd = m.InputInvoiceNo.Update(msg)
+		cmds = append(cmds, cmd)
 	case FocusInvoiceDate:
 		m.InputInvoiceDate, cmd = m.InputInvoiceDate.Update(msg)
 		cmds = append(cmds, cmd)
@@ -162,10 +162,10 @@ func (m InvoiceEditModel) Update(msg tea.Msg) (InvoiceEditModel, tea.Cmd) {
 }
 
 func (m *InvoiceEditModel) UpdateInvoice() tea.Cmd {
-	m.invoice.InvoiceNo = m.InputInvoiceNo.Input.Value()
+	m.invoice.InvoiceNo = m.InputInvoiceNo.Value()
 	m.invoice.InvoiceDate = m.InputInvoiceDate.Value()
-	m.invoice.DeliveryDate = m.InputDeliveryDate.Input.Value()
-	m.invoice.DueDate = m.InputDueDate.Input.Value()
+	m.invoice.DeliveryDate = m.InputDeliveryDate.Value()
+	m.invoice.DueDate = m.InputDueDate.Value()
 	m.invoice.PaymentType = m.SelectPaymentType.Value()
 
 	receiverName := m.SelectReceiverName.Value()
@@ -180,7 +180,7 @@ func (m *InvoiceEditModel) UpdateInvoice() tea.Cmd {
 
 func (m *InvoiceEditModel) Blur() {
 	m.InputInvoiceNo.Blur()
-	m.InputInvoiceDate.Input.Blur()
+	m.InputInvoiceDate.input.Blur()
 	m.InputDeliveryDate.Blur()
 	m.InputDueDate.Blur()
 	m.SelectReceiverName.Blur()
@@ -196,9 +196,9 @@ func (m *InvoiceEditModel) CycleFocus(increment int) tea.Cmd {
 	case FocusInvoiceNo:
 		return m.InputInvoiceNo.Focus()
 	case FocusInvoiceDate:
-		return m.InputInvoiceDate.Input.Focus()
+		return m.InputInvoiceDate.Focus()
 	case FocusDeliveryDate:
-		return m.InputDeliveryDate.Input.Focus()
+		return m.InputDeliveryDate.Focus()
 	case FocusDueDate:
 		return m.InputDueDate.Focus()
 	case FocusReceiver:

@@ -11,20 +11,28 @@ import (
 type Model struct {
 	label      string
 	labelLimit int
-	Input      textinput.Model
+	input      textinput.Model
 
 	isValid func(v string) (bool, error)
 	valid   bool
 	errMsg  error
 }
 
+func (m Model) Value() string {
+	return m.input.Value()
+}
+
+func (m *Model) SetValue(date string) {
+	m.input.SetValue(date)
+}
+
 func (m *Model) Blur() {
-	m.Input.Blur()
+	m.input.Blur()
 	m.input.TextStyle = styles.GreyedOut
 }
 
 func (m Model) Focused() bool {
-	return m.Input.Focused()
+	return m.input.Focused()
 }
 
 func New(label string, limit int) Model {
@@ -37,7 +45,7 @@ func New(label string, limit int) Model {
 	return Model{
 		label:      label,
 		labelLimit: limit,
-		Input:      i,
+		input:      i,
 		isValid:    func(v string) (bool, error) { return true, nil },
 		valid:      false,
 		errMsg:     nil,
@@ -50,7 +58,7 @@ func (m *Model) SetValidation(isValid func(val string) (bool, error)) {
 
 func (m *Model) Focus() tea.Cmd {
 	m.input.TextStyle = styles.ModifyInput
-	return m.Input.Focus()
+	return m.input.Focus()
 }
 
 func (m Model) Init() {}
@@ -59,17 +67,17 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
 
-	m.Input, cmd = m.Input.Update(msg)
+	m.input, cmd = m.input.Update(msg)
 	cmds = append(cmds, cmd)
 
 	m.valid, m.errMsg = m.isValid(m.Input.Value())
 	if m.errMsg != nil {
 		panic(m.errMsg)
 	}
-	if m.Input.Focused() {
+	if m.input.Focused() {
 		m.input.TextStyle = styles.ModifyInput
 	} else {
-		m.Input.TextStyle = styles.GreyedOut
+		m.input.TextStyle = styles.GreyedOut
 	}
 
 	return m, tea.Batch(cmds...)
@@ -86,10 +94,10 @@ func (m Model) View() string {
 	}
 
 	b.WriteString(": ")
-	b.WriteString(m.Input.View())
+	b.WriteString(m.input.View())
 
-	if m.Input.Focused() {
-		b.WriteString(m.Input.Cursor.View())
+	if m.input.Focused() {
+		b.WriteString(m.input.Cursor.View())
 	}
 
 	if m.errMsg != nil {
