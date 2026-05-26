@@ -73,6 +73,9 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func (m Model) LabelOffset() int {
+	return m.labelLimit
+}
 
 func (m Model) View() string {
 	b := strings.Builder{}
