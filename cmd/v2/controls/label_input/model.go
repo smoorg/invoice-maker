@@ -1,11 +1,11 @@
 package labelinput
 
 import (
+	"invoice-maker/cmd/v2/styles"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type Model struct {
@@ -20,7 +20,7 @@ type Model struct {
 
 func (m *Model) Blur() {
 	m.Input.Blur()
-	m.Input.TextStyle = greyedOut
+	m.input.TextStyle = styles.GreyedOut
 }
 
 func (m Model) Focused() bool {
@@ -30,8 +30,8 @@ func (m Model) Focused() bool {
 func New(label string, limit int) Model {
 	i := textinput.New()
 	i.Width = 80
-	i.TextStyle = greyedOut
-	i.PromptStyle = greyedOut
+	i.TextStyle = styles.GreyedOut
+	i.PromptStyle =styles.GreyedOut
 	i.Prompt = ""
 
 	return Model{
@@ -49,7 +49,7 @@ func (m *Model) SetValidation(isValid func(val string) (bool, error)) {
 }
 
 func (m *Model) Focus() tea.Cmd {
-	m.Input.TextStyle = modifyInput
+	m.input.TextStyle = styles.ModifyInput
 	return m.Input.Focus()
 }
 
@@ -67,22 +67,14 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		panic(m.errMsg)
 	}
 	if m.Input.Focused() {
-		m.Input.TextStyle = modifyInput
+		m.input.TextStyle = styles.ModifyInput
 	} else {
-		m.Input.TextStyle = greyedOut
+		m.Input.TextStyle = styles.GreyedOut
 	}
 
 	return m, tea.Batch(cmds...)
 }
 
-var bg = lipgloss.Color("#333")
-var red = lipgloss.Color("#F54927")
-var white = lipgloss.Color("#fff")
-var grey = lipgloss.Color("#555")
-
-var greyedOut = lipgloss.NewStyle().Foreground(grey).Background(lipgloss.NoColor{})
-var modifyInput = lipgloss.NewStyle().Foreground(white).Background(bg)
-var invalidInput = lipgloss.NewStyle().Foreground(red)
 
 func (m Model) View() string {
 	b := strings.Builder{}
@@ -102,7 +94,7 @@ func (m Model) View() string {
 
 	if m.errMsg != nil {
 		b.WriteString("\n")
-		b.WriteString(invalidInput.Render(m.errMsg.Error()))
+		b.WriteString(styles.InvalidInput.Render(m.errMsg.Error()))
 	}
 
 	return b.String()
