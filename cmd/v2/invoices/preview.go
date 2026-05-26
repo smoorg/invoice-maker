@@ -22,7 +22,10 @@ type keymap struct {
 func NewPreviewModel() InvoicePreviewModel {
 	m := InvoicePreviewModel{}
 	m.keys = keymap{
-		Exit: key.NewBinding(key.WithKeys("h"), key.WithHelp("h", "go back")),
+		Exit: key.NewBinding(
+			key.WithKeys("h", "q", tea.KeyEsc.String()),
+			key.WithHelp("h/q/esc", "go back"),
+		),
 	}
 
 	return m
@@ -33,6 +36,7 @@ func (m *InvoicePreviewModel) SetInvoice(v config.Invoice) {
 }
 
 func (m InvoicePreviewModel) Init() {}
+
 func (m InvoicePreviewModel) Update(msg tea.Msg) (InvoicePreviewModel, tea.Cmd) {
 	return m, nil
 }

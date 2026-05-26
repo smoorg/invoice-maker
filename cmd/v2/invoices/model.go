@@ -255,6 +255,7 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 						log.Fatal(err)
 					}
 				}(m.printPath)
+
 				return m, pkg.GoInvoicePreview()
 			}
 		case key.Matches(msg, m.keys.Edit):

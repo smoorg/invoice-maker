@@ -94,7 +94,6 @@ func NewRootModel() RootModel {
 				tea.KeyCtrlQ.String(),
 				tea.KeyCtrlC.String(),
 				tea.KeyCtrlD.String(),
-				"q",
 			),
 			key.WithHelp("^C/^D/^Q/q", "quit"),
 		),

@@ -126,10 +126,10 @@ func (m ConfigModel) Update(msg tea.Msg) (ConfigModel, tea.Cmd) {
 				m.focusID = 0
 			default:
 			}
-			case key.Matches(msg, m.keys.Esc):
-				m.focusID = 0
-				m.FontFamily.Blur()
-				m.InvoiceDirectory.Blur()
+		case key.Matches(msg, m.keys.Esc):
+			m.focusID = 0
+			m.FontFamily.Blur()
+			m.InvoiceDirectory.Blur()
 		case key.Matches(msg, m.keys.Back):
 			// TODO: think of a better way to avoid key event fallback
 			// I wanted to avoid triggering esc event when we have
