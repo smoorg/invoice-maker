@@ -33,6 +33,7 @@ type RootModel struct {
 	receivers    receiver.ReceiversModel
 	receiverEdit edit.ReceiverEdit
 	configModel  configview.ConfigModel
+
 	keys         keymap
 	helpContent  string
 }
@@ -60,10 +61,11 @@ func NewRootModel() RootModel {
 	m.viewList.SetShowHelp(false)
 	m.viewList.SetShowFilter(false)
 
-	err := setConfig(&m.config)
+	cfg, err := config.GetConfig(&m.config)
 	if err != nil {
 		log.Fatal(err)
 	}
+	m.config = *cfg
 
 	m.invoiceModel = invoices.New(m.config)
 	m.receivers = receiver.New()
@@ -110,16 +112,6 @@ func NewRootModel() RootModel {
 	m.helpContent = helpBubble.ShortHelpView(pkg_help.MapToBindingsList(m.keys))
 
 	return m
-}
-
-// Initializes config from a file
-func setConfig(v *config.Config) error {
-	cfg, err := config.GetConfig(v)
-	if err == nil {
-		v = cfg
-	}
-
-	return err
 }
 
 type keymap struct {

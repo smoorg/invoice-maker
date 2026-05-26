@@ -29,7 +29,7 @@ import (
 type InvoiceView uint64
 
 const (
-	ViewMain InvoiceView = iota
+	ViewList InvoiceView = iota
 	ViewPreview
 	ViewPrint
 	ViewEdit
@@ -52,6 +52,7 @@ type InvoicesModel struct {
 	font      config.FontCfg
 
 	table table.Model
+	cols  *InvoiceListColumns
 	flex  flexbox.HorizontalFlexBox
 
 	helpContent  string
@@ -78,17 +79,47 @@ func (m *InvoicesModel) SetSize(width int, height int) {
 	m.table.SetHeight(height)
 }
 
+const (
+	ColumnDate = iota
+	ColumnPaymentDate
+	ColumnInvoiceNo
+	ColumnReceiver
+	ColumnNet
+	ColumnGross
+)
+
+type InvoiceListColumns struct {
+	columns []table.Column
+}
+
+func NewCols() *InvoiceListColumns {
+	c := make([]table.Column, 6)
+
+	c[ColumnDate] = table.Column{Title: "Date", Width: 10}
+	c[ColumnPaymentDate] = table.Column{Title: "Payment Date", Width: 10}
+	c[ColumnInvoiceNo] = table.Column{Title: "Invoice No.", Width: 10}
+	c[ColumnReceiver] = table.Column{Title: "Receiver", Width: 10}
+	c[ColumnNet] = table.Column{Title: "Net", Width: 8}
+	c[ColumnGross] = table.Column{Title: "Gross", Width: 8}
+
+	return &InvoiceListColumns{
+		columns: c,
+	}
+}
+
+func (c InvoiceListColumns) Get() []table.Column {
+	return c.columns
+}
+
+func (c InvoiceListColumns) GetInvoiceNo() table.Column {
+	return c.columns[ColumnInvoiceNo]
+}
+
 func New(config config.Config) InvoicesModel {
 	m := InvoicesModel{}
+	m.cols = NewCols()
 	m.table = table.New(
-		table.WithColumns([]table.Column{
-			{Title: "Date", Width: 10},
-			{Title: "Payment Date", Width: 10},
-			{Title: "Invoice No.", Width: 11},
-			{Title: "Receiver", Width: 20},
-			{Title: "Net", Width: 8},
-			{Title: "Gross", Width: 8},
-		}),
+		table.WithColumns(m.cols.Get()),
 	)
 	m.table.SetHeight(5)
 	m.table.SetWidth(100)
@@ -167,7 +198,7 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 		m.view = ViewEdit
 
 		picked := m.table.SelectedRow()
-		inv, _, err := getInvoice(m.invoices, picked[2], picked[4])
+		inv, _, err := getInvoice(m.invoices, picked[ColumnInvoiceNo], picked[ColumnNet])
 		if err != nil {
 			panic(err)
 		}
@@ -179,26 +210,26 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keys.Back):
 			switch m.view {
-			case ViewMain:
+			case ViewList:
 				cmds = append(cmds, pkg.GoMain())
 			case ViewPreview:
-				m.view = ViewMain
+				m.view = ViewList
 			case ViewPrint:
-				m.view = ViewMain
+				m.view = ViewList
 			}
 		case key.Matches(msg, m.keys.Down):
 			switch m.view {
-			case ViewMain:
+			case ViewList:
 				m.table.MoveDown(1)
 			}
 		case key.Matches(msg, m.keys.Up):
 			switch m.view {
-			case ViewMain:
+			case ViewList:
 				m.table.MoveUp(1)
 			}
 		case key.Matches(msg, m.keys.Next):
 			switch m.view {
-			case ViewMain:
+			case ViewList:
 				cmd = pkg.GoInvoicePreview()
 				cmds = append(cmds, cmd)
 			case ViewPreview:
@@ -206,23 +237,26 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 				cmds = append(cmds, cmd)
 			}
 		case key.Matches(msg, m.keys.Print):
-			m.view = ViewPrint
+			switch m.view {
+			case ViewList:
+				m.view = ViewPrint
 
-			picked := m.table.SelectedRow()
-			invContent, err := getInvoiceContent(m.invoices, picked[2], picked[4])
-			if err != nil {
-				panic(err)
-			}
-			m.printPath = m.printInvoice(invContent)
-
-			go func(file string) {
-				cmd := exec.Command("xdg-open", file)
-				_, err := cmd.Output()
+				picked := m.table.SelectedRow()
+				invContent, err := getInvoiceContent(m.invoices, picked[ColumnInvoiceNo], picked[ColumnNet])
 				if err != nil {
-					log.Fatal(err)
+					panic(err)
 				}
-			}(m.printPath)
-			return m, pkg.GoInvoicePreview()
+				m.printPath = m.printInvoice(invContent)
+
+				go func(file string) {
+					cmd := exec.Command("xdg-open", file)
+					_, err := cmd.Output()
+					if err != nil {
+						log.Fatal(err)
+					}
+				}(m.printPath)
+				return m, pkg.GoInvoicePreview()
+			}
 		case key.Matches(msg, m.keys.Edit):
 			m.view = ViewEdit
 		}
@@ -235,7 +269,7 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 	case ViewPreview:
 		m.invoice, cmd = m.invoice.Update(msg)
 		cmds = append(cmds, cmd)
-	case ViewMain:
+	case ViewList:
 		m.table, cmd = m.table.Update(msg)
 		cmds = append(cmds, cmd)
 		m.flex.GetColumn(0).GetCell(0).SetContent(m.table.View())
@@ -247,7 +281,7 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 		for _, v := range m.invoices {
 			if v.InvoiceNo == picked[2] && v.NetSum() == picked[4] {
 				m.invoice.SetInvoice(v)
-				m.edit.SetInvoice(&v)
+				m.edit.SetInvoiceModel(&v)
 			}
 		}
 	case ViewPrint:
@@ -269,7 +303,7 @@ func (m InvoicesModel) View() string {
 		}
 		content = fmt.Sprintf("Your invoice got print at:\n%s", m.printPath)
 
-	case ViewMain:
+	case ViewList:
 		availHeight := m.flex.GetHeight()
 		availHeight -= lipgloss.Height(m.helpContent)
 		m.flex.SetHeight(availHeight)
