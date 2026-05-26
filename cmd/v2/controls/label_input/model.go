@@ -13,7 +13,6 @@ type Model struct {
 	labelLimit int
 	input      textinput.Model
 
-	isValid func(v string) (bool, error)
 	valid   bool
 	errMsg  error
 }
@@ -46,14 +45,9 @@ func New(label string, limit int) Model {
 		label:      label,
 		labelLimit: limit,
 		input:      i,
-		isValid:    func(v string) (bool, error) { return true, nil },
 		valid:      false,
 		errMsg:     nil,
 	}
-}
-
-func (m *Model) SetValidation(isValid func(val string) (bool, error)) {
-	m.isValid = isValid
 }
 
 func (m *Model) Focus() tea.Cmd {
@@ -70,10 +64,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	m.input, cmd = m.input.Update(msg)
 	cmds = append(cmds, cmd)
 
-	m.valid, m.errMsg = m.isValid(m.Input.Value())
-	if m.errMsg != nil {
-		panic(m.errMsg)
-	}
 	if m.input.Focused() {
 		m.input.TextStyle = styles.ModifyInput
 	} else {

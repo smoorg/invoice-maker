@@ -74,6 +74,7 @@ func NewEditModel(opts ...Option) InvoiceEditModel {
 	}
 
 	m.InputInvoiceNo = labelinput.New("Invoice No.", 20)
+	m.timeLayout = time.DateOnly
 	m.InputInvoiceDate = NewDateInput("Invoice Date", 20, time.Time{}, m.timeLayout)
 	m.InputDeliveryDate = labelinput.New("DeliveryDate", 20)
 	m.InputDueDate = labelinput.New("Due Date", 20)
