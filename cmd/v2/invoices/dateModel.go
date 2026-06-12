@@ -25,8 +25,6 @@ func (m *DateInput) Value() string {
 	return m.time.Format(m.layout)
 }
 
-var dateRegex = "^[0-9-]+$"
-
 func (m DateInput) SetValue(date string) {
 	m.input.SetValue(date)
 	m.errMsg = m.Validate(date)

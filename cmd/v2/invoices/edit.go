@@ -22,6 +22,7 @@ const (
 	FocusDueDate
 	FocusReceiver
 	FocusPaymentType
+	FocusBtnAddItem
 	FocusBtnSave
 	// FocusItems
 )
@@ -29,11 +30,11 @@ const (
 const FocusNumOfItems = 4
 
 type InvoiceEditModel struct {
-	focus      int
-	timeLayout string
-	invoice    *config.Invoice
-	receivers  []config.Company
-	issuers    []config.Issuer
+	focus             int
+	timeLayout        string
+	invoice           *config.Invoice
+	receivers         []config.Company
+	issuers           []config.Issuer
 
 	InputInvoiceNo     labelinput.Model
 	InputInvoiceDate   DateInput
@@ -42,7 +43,8 @@ type InvoiceEditModel struct {
 	SelectReceiverName singleselect.Model
 	SelectPaymentType  singleselect.Model
 
-	BtnSave button.ButtonModel
+	BtnSave    button.ButtonModel
+	BtnAddItem button.ButtonModel
 	// Items            singleselect.Model
 }
 
@@ -96,6 +98,7 @@ func NewEditModel(opts ...Option) InvoiceEditModel {
 	m.SelectPaymentType = singleselect.New("Payment Type", 20, paymentTypes)
 
 	m.BtnSave = button.NewButton("save", "Save")
+	m.BtnAddItem = button.NewButton("add", "Add Item")
 
 	return m
 }
@@ -107,8 +110,11 @@ func (m InvoiceEditModel) Update(msg tea.Msg) (InvoiceEditModel, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case button.ButtonSubmitEvent:
-		if msg.ButtonName == m.BtnSave.Name {
+		switch msg.ButtonName {
+		case m.BtnSave.Name:
 			return m, m.UpdateInvoice()
+		case m.BtnAddItem.Name:
+			return m, m.AddItem()
 		}
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -162,6 +168,12 @@ func (m InvoiceEditModel) Update(msg tea.Msg) (InvoiceEditModel, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
+func (m *InvoiceEditModel) AddItem() tea.Cmd {
+	m.invoice.Items = append(m.invoice.Items, config.InvoiceItem{})
+
+	return nil
+}
+
 func (m *InvoiceEditModel) UpdateInvoice() tea.Cmd {
 	m.invoice.InvoiceNo = m.InputInvoiceNo.Value()
 	m.invoice.InvoiceDate = m.InputInvoiceDate.Value()
@@ -186,6 +198,7 @@ func (m *InvoiceEditModel) Blur() {
 	m.InputDueDate.Blur()
 	m.SelectReceiverName.Blur()
 	m.SelectPaymentType.Blur()
+	m.BtnAddItem.Blur()
 	m.BtnSave.Blur()
 	// m.Items.Blur()
 }
@@ -206,6 +219,8 @@ func (m *InvoiceEditModel) CycleFocus(increment int) tea.Cmd {
 		m.SelectReceiverName.Focus()
 	case FocusPaymentType:
 		m.SelectPaymentType.Focus()
+	case FocusBtnAddItem:
+		m.BtnAddItem.Focus()
 	case FocusBtnSave:
 		m.BtnSave.Focus()
 	default:
@@ -221,6 +236,12 @@ func (m *InvoiceEditModel) CycleFocus(increment int) tea.Cmd {
 	return nil
 }
 
+var thickBorderStyle = lipgloss.NewStyle().
+	Border(lipgloss.ThickBorder()).
+	Padding(1)
+
+var marginStyle = lipgloss.NewStyle().Padding(1)
+
 func (m InvoiceEditModel) View() string {
 	s := strings.Builder{}
 	formItems := []string{
@@ -230,6 +251,7 @@ func (m InvoiceEditModel) View() string {
 		m.InputDueDate.View(),
 		m.SelectReceiverName.View(),
 		m.SelectPaymentType.View(),
+		m.BtnAddItem.View(),
 		m.BtnSave.View(),
 		//m.Items.View(),
 	}
@@ -244,8 +266,7 @@ func (m InvoiceEditModel) View() string {
 		}
 	}
 
-	content := lipgloss.NewStyle().
-		Border(lipgloss.ThickBorder()).Padding(1).Render(s.String())
+	//content := thickBorderStyle.Render(s.String())
 
-	return content
+	return marginStyle.Render(s.String())
 }

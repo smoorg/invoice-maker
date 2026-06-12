@@ -32,6 +32,7 @@ func (m *ButtonModel) Blur() {
 }
 
 func (m ButtonModel) Init() {}
+
 func (m ButtonModel) Update(msg tea.Msg) tea.Cmd {
 	var cmd tea.Cmd
 
@@ -49,12 +50,20 @@ func (m ButtonModel) Update(msg tea.Msg) tea.Cmd {
 
 }
 
-var btnStyle = lipgloss.NewStyle().Background(lipgloss.Color("#FF6600")).Width(10)
-var btnFocusStyle = lipgloss.NewStyle().Background(lipgloss.Color("#666666")).Width(10)
+var btnStyle = lipgloss.NewStyle().
+	Background(lipgloss.Color("#666666")).
+	Width(10).
+	AlignHorizontal(lipgloss.Center).
+	Margin(1)
+
+var btnFocusStyle = btnStyle.
+	Padding(0).
+	Margin(0).
+	Border(lipgloss.NormalBorder())
 
 func (m ButtonModel) View() string {
 	if m.focus {
-		return btnFocusStyle.Render("Save")
+		return btnFocusStyle.Render(m.label)
 	}
-	return btnStyle.Render("Save")
+	return btnStyle.Render(m.label)
 }
