@@ -36,12 +36,14 @@ const (
 )
 
 type KeyMap struct {
-	Up    key.Binding
-	Down  key.Binding
-	Next  key.Binding
-	Print key.Binding
-	Back  key.Binding
-	Edit  key.Binding
+	Up     key.Binding
+	Down   key.Binding
+	Next   key.Binding
+	Print  key.Binding
+	Back   key.Binding
+	Edit   key.Binding
+	Top    key.Binding
+	Bottom key.Binding
 }
 
 type InvoicesModel struct {
@@ -160,6 +162,14 @@ func New(config config.Config) InvoicesModel {
 			key.WithKeys("e"),
 			key.WithHelp("e", "edit"),
 		),
+		Top: key.NewBinding(
+			key.WithKeys("^", "g"),
+			key.WithHelp("^/g", "top"),
+		),
+		Bottom: key.NewBinding(
+			key.WithKeys("G"),
+			key.WithHelp("G", "bottom"),
+		),
 	}
 
 	helpBubble := help.New()
@@ -236,6 +246,10 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 				cmd = pkg.GoInvoiceEdit()
 				cmds = append(cmds, cmd)
 			}
+		case key.Matches(msg, m.keys.Top):
+			m.table.MoveUp(m.table.Cursor())
+		case key.Matches(msg, m.keys.Bottom):
+			m.table.MoveDown(len(m.table.Rows()) - 1 - m.table.Cursor())
 		case key.Matches(msg, m.keys.Print):
 			switch m.view {
 			case ViewList:
