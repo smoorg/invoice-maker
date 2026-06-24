@@ -83,3 +83,7 @@ func TestGetItemTemplateSize(t *testing.T) {
 		t.Error("Should have been 13 items")
 	}
 }
+
+func TestSplitByWords(t *testing.T) {
+	row := "[   Title   ] | [Qty]\n[   Title   ] [Qty]"
+}

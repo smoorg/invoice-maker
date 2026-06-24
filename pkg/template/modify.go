@@ -17,7 +17,7 @@ func replaceField(result *string, label string, value string) error {
 	re := regexp.MustCompile(`\[\s*` + label + `\s*\]`)
 
 	allSubmatches := re.FindAllStringSubmatch(*result, -1)
-	if len(allSubmatches) == 0 {
+	if len(allSubmatches) == 0  || len (allSubmatches[0]) == 0 {
 		return nil
 	}
 
@@ -27,19 +27,10 @@ func replaceField(result *string, label string, value string) error {
 	if label == "Title" {
 		// this is when amount of characters for a field value is less than field in the template
 		if offset < 0 {
-			// add first row
-			val := value[0:(len(submatch) - 1)]
-			offset = utf8.RuneCountInString(submatch) - utf8.RuneCountInString(val)
-			val = val + strings.Repeat(" ", offset)
-			localResult = strings.Replace(localResult, submatch, val, 1)
-
-			// add second row
-			val = value[(len(submatch) - 1):(len(value) - 1)]
-			offset = utf8.RuneCountInString(submatch) - utf8.RuneCountInString(val)
-			val = val + strings.Repeat(" ", offset)
-			localResult = strings.Replace(localResult, submatch, val, 2)
+			row1, row2 := SplitIntoTwoByWord(value, submatch)
+			localResult = strings.Replace(localResult, submatch, row1, 1)
+			localResult = strings.Replace(localResult, submatch, row2, 2)
 		} else {
-			// add first row
 			offset = utf8.RuneCountInString(submatch) - utf8.RuneCountInString(value)
 			val := value + strings.Repeat(" ", offset)
 			localResult = strings.Replace(localResult, submatch, val, 1)
@@ -54,10 +45,33 @@ func replaceField(result *string, label string, value string) error {
 		padding = strings.Repeat(" ", offset)
 	}
 	finalLabel := value + padding
-	final := strings.ReplaceAll(*result, submatch, finalLabel)
+	final := strings.Replace(*result, submatch, finalLabel, 1)
 	*result = final
 
 	return nil
+}
+
+func SplitIntoTwoByWord(value string, match string) (string, string) {
+	var row1, row2 string
+
+	valueWords := strings.SplitSeq(value, " ")
+
+	for word := range valueWords {
+		newVal := row1 + " " + word
+		offset := utf8.RuneCountInString(match) - utf8.RuneCountInString(newVal)
+		if offset < 0 {
+			row2 = value[len(row1)-1:]
+			break
+		}
+		row1 = newVal
+	}
+
+	offsetRow1 := utf8.RuneCountInString(match) - utf8.RuneCountInString(row1)
+	row1 = row1 + strings.Repeat(" ", offsetRow1)
+
+	offsetRow2 := utf8.RuneCountInString(match) - utf8.RuneCountInString(row2)
+	row2 = row2 + strings.Repeat(" ", offsetRow2)
+	return row1, row2
 }
 
 func InsertRows(t string, label string, value string) string {
@@ -152,6 +166,13 @@ func ApplyInvoice(templateStr *string, rowTemplate string, cfg *config.Invoice) 
 	// string representation of item to aply
 	for _, v := range items {
 		if err := replaceField(&itemsStr, v.Label, v.Value); err != nil {
+			return err
+		}
+	}
+
+	// go again to clear not replaced crap like double lines for expand title purpose
+	for _, v := range items {
+		if err := replaceField(&itemsStr, v.Label, ""); err != nil {
 			return err
 		}
 	}
