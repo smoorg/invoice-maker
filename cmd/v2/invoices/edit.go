@@ -24,17 +24,16 @@ const (
 	FocusPaymentType
 	FocusBtnAddItem
 	FocusBtnSave
-	// FocusItems
 )
 
 const FocusNumOfItems = 4
 
 type InvoiceEditModel struct {
-	focus             int
-	timeLayout        string
-	invoice           *config.Invoice
-	receivers         []config.Company
-	issuers           []config.Issuer
+	focus      int
+	timeLayout string
+	invoice    *config.Invoice
+	receivers  []config.Company
+	issuers    []config.Issuer
 
 	InputInvoiceNo     labelinput.Model
 	InputInvoiceDate   DateInput
@@ -253,7 +252,6 @@ func (m InvoiceEditModel) View() string {
 		m.SelectPaymentType.View(),
 		m.BtnAddItem.View(),
 		m.BtnSave.View(),
-		//m.Items.View(),
 	}
 
 	for i, v := range formItems {
@@ -265,8 +263,6 @@ func (m InvoiceEditModel) View() string {
 			s.WriteString("\n")
 		}
 	}
-
-	//content := thickBorderStyle.Render(s.String())
 
 	return marginStyle.Render(s.String())
 }

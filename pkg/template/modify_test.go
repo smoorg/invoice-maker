@@ -23,9 +23,9 @@ func TestInsertItems(t *testing.T) {
 func TestSumUp(t *testing.T) {
 	items := []config.InvoiceItem{}
 	items = append(items, config.InvoiceItem{
-		Price:     "100",
-		Quantity:  100,
-		VatRate:   23,
+		Price:    "100",
+		Quantity: 100,
+		VatRate:  23,
 	})
 
 	sum, tax, total := template.SumUp(&items)
@@ -53,7 +53,7 @@ func TestTotal(t *testing.T) {
 	invoice := &config.Invoice{}
 	invoice.Items = append(invoice.Items, config.InvoiceItem{
 		Title:    "Test",
-		Price:    "1000",
+		Price:    "1000.00",
 		VatRate:  23,
 		Quantity: 2,
 	})
@@ -70,6 +70,16 @@ func TestTotal(t *testing.T) {
 
 	expected := "2    |1000.00|2000.00 |23% |460.00  |2460.00"
 	if !strings.Contains(sut, expected) {
-	    t.Error("Invalid amount sum:", sut, "compared to expected:", expected)
+		t.Error("Invalid amount sum:\n", sut, "\ncompared to expected:\n", expected)
+	}
+}
+
+func TestGetItemTemplateSize(t *testing.T) {
+	row := "[   Title   ] [Qty]"
+
+	sut := template.GetItemTemplateSize("Title", row)
+
+	if sut != 13 {
+		t.Error("Should have been 13 items")
 	}
 }
