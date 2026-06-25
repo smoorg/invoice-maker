@@ -1,4 +1,4 @@
-package invoices
+package preview
 
 import (
 	"invoice-maker/pkg/config"

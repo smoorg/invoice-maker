@@ -1,4 +1,4 @@
-package invoices
+package edit
 
 import (
 	"invoice-maker/cmd/v2/controls/button"
@@ -28,6 +28,8 @@ const (
 
 const FocusNumOfItems = 4
 
+type keymap struct {}
+
 type InvoiceEditModel struct {
 	focus      int
 	timeLayout string
@@ -36,7 +38,7 @@ type InvoiceEditModel struct {
 	issuers    []config.Issuer
 
 	InputInvoiceNo     labelinput.Model
-	InputInvoiceDate   DateInput
+	InputInvoiceDate   labelinput.Model
 	InputDeliveryDate  labelinput.Model
 	InputDueDate       labelinput.Model
 	SelectReceiverName singleselect.Model
@@ -76,7 +78,7 @@ func NewEditModel(opts ...Option) InvoiceEditModel {
 
 	m.InputInvoiceNo = labelinput.New("Invoice No.", 20)
 	m.timeLayout = time.DateOnly
-	m.InputInvoiceDate = NewDateInput("Invoice Date", 20, time.Time{}, m.timeLayout)
+	m.InputInvoiceDate = labelinput.New("Invoice Date", 20)
 	m.InputDeliveryDate = labelinput.New("DeliveryDate", 20)
 	m.InputDueDate = labelinput.New("Due Date", 20)
 
@@ -192,7 +194,7 @@ func (m *InvoiceEditModel) UpdateInvoice() tea.Cmd {
 
 func (m *InvoiceEditModel) Blur() {
 	m.InputInvoiceNo.Blur()
-	m.InputInvoiceDate.input.Blur()
+	m.InputInvoiceDate.Blur()
 	m.InputDeliveryDate.Blur()
 	m.InputDueDate.Blur()
 	m.SelectReceiverName.Blur()

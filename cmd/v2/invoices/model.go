@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"time"
 
+	"invoice-maker/cmd/v2/invoices/edit"
+	"invoice-maker/cmd/v2/invoices/preview"
 	"invoice-maker/pkg"
 	"invoice-maker/pkg/config"
 	"invoice-maker/pkg/font"
@@ -35,7 +37,7 @@ const (
 	ViewEdit
 )
 
-type KeyMap struct {
+type keyMap struct {
 	Up     key.Binding
 	Down   key.Binding
 	Next   key.Binding
@@ -48,8 +50,8 @@ type KeyMap struct {
 
 type InvoicesModel struct {
 	invoices  []config.Invoice `yaml:"invoices"`
-	invoice   InvoicePreviewModel
-	edit      InvoiceEditModel
+	invoice   preview.InvoicePreviewModel
+	edit      edit.InvoiceEditModel
 	directory string
 	font      config.FontCfg
 
@@ -61,7 +63,7 @@ type InvoicesModel struct {
 	printContent string
 	printPath    string
 	view         InvoiceView
-	keys         KeyMap
+	keys         keyMap
 }
 
 func (m *InvoicesModel) SetConfig(cfg config.Config) {
@@ -135,9 +137,9 @@ func New(config config.Config) InvoicesModel {
 	m.flex.AddColumns(columns)
 	m.directory = config.Config.InvoiceDirectory
 	m.font = config.Config
-	m.edit = NewEditModel()
+	m.edit = edit.NewEditModel()
 
-	m.keys = KeyMap{
+	m.keys = keyMap{
 		Up: key.NewBinding(
 			key.WithKeys("k", tea.KeyUp.String()),
 			key.WithHelp("↑/k", "up"),
@@ -212,7 +214,7 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 		if err != nil {
 			panic(err)
 		}
-		m.edit.invoice = inv
+		m.edit.SetInvoiceModel(inv)
 
 	case pkg.JumpInvoicePreview:
 		m.view = ViewPreview
