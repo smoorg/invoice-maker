@@ -10,15 +10,19 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+const logFileName = "logs.txt"
+
 func main() {
-	err := os.Remove("logs.txt")
+	err := os.Remove(logFileName)
 	if err != nil {
 		log.Fatal(err)
 	}
-	file, err := os.OpenFile("logs.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+
+	file, err := os.OpenFile(logFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	log.SetOutput(file)
 	log.Println("This log message will be written to the file.")
 
