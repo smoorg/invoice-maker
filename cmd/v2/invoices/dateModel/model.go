@@ -29,7 +29,7 @@ func (m DateInput) Blur() tea.Cmd {
 
 func (m *DateInput) Value() string {
 	return m.Value()
-	return m.time.Format(m.layout)
+	//return m.time.Format(m.layout)
 }
 
 func (m DateInput) SetValue(date string) {
