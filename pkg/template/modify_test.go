@@ -10,16 +10,6 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func TestInsertItems(t *testing.T) {
-	row := "[ Items                       ]\n"
-
-	sut := template.InsertRows(row, "Items", "test")
-
-	if !strings.Contains(sut, "test") {
-		t.Error("InsertRows did not add value properly", sut)
-	}
-}
-
 func TestSumUp(t *testing.T) {
 	items := []config.InvoiceItem{}
 	items = append(items, config.InvoiceItem{
@@ -82,8 +72,4 @@ func TestGetItemTemplateSize(t *testing.T) {
 	if sut != 13 {
 		t.Error("Should have been 13 items")
 	}
-}
-
-func TestSplitByWords(t *testing.T) {
-	row := "[   Title   ] | [Qty]\n[   Title   ] [Qty]"
 }

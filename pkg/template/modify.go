@@ -2,6 +2,7 @@ package template
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -17,7 +18,7 @@ func replaceField(result *string, label string, value string) error {
 	re := regexp.MustCompile(`\[\s*` + label + `\s*\]`)
 
 	allSubmatches := re.FindAllStringSubmatch(*result, -1)
-	if len(allSubmatches) == 0  || len (allSubmatches[0]) == 0 {
+	if len(allSubmatches) == 0 || len(allSubmatches[0]) == 0 {
 		return nil
 	}
 
@@ -74,12 +75,6 @@ func SplitIntoTwoByWord(value string, match string) (string, string) {
 	return row1, row2
 }
 
-func InsertRows(t string, label string, value string) string {
-	re := regexp.MustCompile(`\[\s*` + label + `\s*\]\n`)
-
-	return re.ReplaceAllString(t, value)
-}
-
 func SumUp(items *[]config.InvoiceItem) (decimal.Decimal, decimal.Decimal, decimal.Decimal) {
 	decimal.DivisionPrecision = 2
 	if len(*items) == 0 {
@@ -103,14 +98,18 @@ func SumUp(items *[]config.InvoiceItem) (decimal.Decimal, decimal.Decimal, decim
 	return amountSum, vatSum, totSum
 }
 
+type Item struct {
+	Fields []*ItemField
+}
+
 type ItemField struct {
-	Label   string
-	Value   string
-	MaxSize int
+	Label  string
+	Value  string
+	MaxLen int
 }
 
 func GetItemTemplateSize(label, rowTemplate string) int {
-	re := regexp.MustCompile(`\[\s*` + label + `\s*\]`)
+	re := regexp.MustCompile(`\[\s+` + label + `\s+\]`)
 
 	allSubmatches := re.FindAllStringSubmatch(rowTemplate, -1)
 	if len(allSubmatches) == 0 {
@@ -123,27 +122,81 @@ func GetItemTemplateSize(label, rowTemplate string) int {
 	return utf8.RuneCountInString(submatch)
 }
 
-func ParseItems(i *config.Invoice, rowTemplate string) []*ItemField {
-	itemFields := []*ItemField{}
-	for _, item := range i.Items {
+const (
+	TemplFTitle           = "Title"
+	TemplFQuantity        = "Qty"
+	TemplFUnit            = "Unit"
+	TemplFPrice           = "Price"
+	TemplFAmount          = "Amount"
+	TemplFVatRate         = "VR"
+	TemplFVatAmount       = "VA"
+	TemplFTotal           = "Total"
+	TemplFIssuerName      = "IssuerName"
+	TemplFIssuerAddress   = "IssuerAddress"
+	TemplFIssuerTaxID     = "IssuerTaxID"
+	TemplFAccountNo       = "AccountNo"
+	TemplFIssuerBankName  = "IssuerBankName"
+	TemplFIssuerBic       = "IssuerBic"
+	TemplFReceiverName    = "ReceiverName"
+	TemplFReceiverAddress = "ReceiverAddress"
+	TemplFReceiverTaxID   = "ReceiverTaxID"
+	TemplFPaymentType     = "PaymentType"
+	TemplFInvoiceNo       = "InvoiceNo"
+	TemplFInvoiceDate     = "InvoiceDate"
+	TemplFDueDate         = "DueDate"
+	TemplFASum            = "ASum"
+	TemplFTaxSum          = "TaxSum"
+	TemplFTotSum          = "TotSum"
+)
+
+func ParseItems(i *config.Invoice, rowTemplate string) []*Item {
+	items := []*Item{}
+	for _, v := range i.Items {
+		itemFields := []*ItemField{}
 		itemFields = append(
 			itemFields,
-			&ItemField{Label: "Title", Value: item.Title},
-			&ItemField{Label: "Qty", Value: fmt.Sprint(item.Quantity)},
-			&ItemField{Label: "Unit", Value: fmt.Sprint(item.Unit)},
-			&ItemField{Label: "Price", Value: item.Price},
-			&ItemField{Label: "Amount", Value: item.Amount},
-			&ItemField{Label: "VR", Value: fmt.Sprint(item.VatRate)},
-			&ItemField{Label: "VA", Value: item.CalculateVatAmount().StringFixed(2)},
-			&ItemField{Label: "Total", Value: item.CalculateItemTotal().StringFixed(2)},
+			&ItemField{
+				Label: TemplFTitle,
+				Value: v.Title,
+			},
+			&ItemField{
+				Label: TemplFQuantity,
+				Value: fmt.Sprint(v.Quantity),
+			},
+			&ItemField{
+				Label: TemplFUnit,
+				Value: fmt.Sprint(v.Unit),
+			},
+			&ItemField{
+				Label: TemplFPrice,
+				Value: v.Price,
+			},
+			&ItemField{
+				Label: TemplFAmount,
+				Value: v.Amount,
+			},
+			&ItemField{
+				Label: TemplFVatRate,
+				Value: fmt.Sprint(v.VatRate, "%"),
+			},
+			&ItemField{
+				Label: TemplFVatAmount,
+				Value: v.CalculateVatAmount().StringFixed(2),
+			},
+			&ItemField{
+				Label: TemplFTotal,
+				Value: v.CalculateItemTotal().StringFixed(2),
+			},
 		)
 
 		for _, field := range itemFields {
-			field.MaxSize = GetItemTemplateSize(field.Label, rowTemplate)
+			field.MaxLen = GetItemTemplateSize(field.Label, rowTemplate)
 		}
+
+		items = append(items, &Item{Fields: itemFields})
 	}
 
-	return itemFields
+	return items
 }
 
 func ApplyInvoice(templateStr *string, rowTemplate string, cfg *config.Invoice) error {
@@ -151,51 +204,47 @@ func ApplyInvoice(templateStr *string, rowTemplate string, cfg *config.Invoice) 
 	if rowTemplate == "" || len(cfg.Items) <= 0 {
 		return nil
 	}
-	itemsStr := rowTemplate
 
 	items := ParseItems(cfg, rowTemplate)
 
-	// if any field is bigger than a row template then double the lines of a row template
-	for _, v := range items {
-		if utf8.RuneCountInString(v.Value) > v.MaxSize {
-			itemsStr += rowTemplate
-			break
+	filledRows := []string{}
+	log.Printf("items len %d", len(items))
+	for idx, v := range items {
+		str, err := AppendItem(v, rowTemplate)
+		if err != nil {
+			panic(err)
 		}
+
+		// trim newline on last item
+		if idx == (len(items) - 1) {
+			str = str[0 : len(str)-2]
+		}
+		filledRows = append(filledRows, str)
 	}
 
-	// string representation of item to aply
-	for _, v := range items {
-		if err := replaceField(&itemsStr, v.Label, v.Value); err != nil {
-			return err
-		}
-	}
+	log.Println("inserting rows to templateStr", filledRows)
 
-	// go again to clear not replaced crap like double lines for expand title purpose
-	for _, v := range items {
-		if err := replaceField(&itemsStr, v.Label, ""); err != nil {
-			return err
-		}
+	if err := replaceField(templateStr, "Items", strings.Join(filledRows, "")); err != nil {
+		panic(err)
 	}
-
-	*templateStr = InsertRows(*templateStr, "Items", itemsStr)
 
 	fields := &map[string]string{
-		"IssuerName":      cfg.Issuer.Name,
-		"IssuerAddress":   cfg.Issuer.Address,
-		"IssuerTaxID":     cfg.Issuer.TaxID,
-		"AccountNo":       cfg.Issuer.Account,
-		"IssuerBankName":  cfg.Issuer.BankName,
-		"IssuerBic":       cfg.Issuer.BIC,
-		"ReceiverName":    cfg.Receiver.Name,
-		"ReceiverAddress": cfg.Receiver.Address,
-		"ReceiverTaxID":   cfg.Receiver.TaxID,
-		"PaymentType":     cfg.PaymentType,
-		"InvoiceNo":       cfg.InvoiceNo,
-		"InvoiceDate":     cfg.InvoiceDate,
-		"DueDate":         cfg.DueDate,
-		"ASum":            amount.StringFixed(2),
-		"TaxSum":          tax.StringFixed(2),
-		"TotSum":          total.StringFixed(2),
+		TemplFIssuerName:      cfg.Issuer.Name,
+		TemplFIssuerAddress:   cfg.Issuer.Address,
+		TemplFIssuerTaxID:     cfg.Issuer.TaxID,
+		TemplFAccountNo:       cfg.Issuer.Account,
+		TemplFIssuerBankName:  cfg.Issuer.BankName,
+		TemplFIssuerBic:       cfg.Issuer.BIC,
+		TemplFReceiverName:    cfg.Receiver.Name,
+		TemplFReceiverAddress: cfg.Receiver.Address,
+		TemplFReceiverTaxID:   cfg.Receiver.TaxID,
+		TemplFPaymentType:     cfg.PaymentType,
+		TemplFInvoiceNo:       cfg.InvoiceNo,
+		TemplFInvoiceDate:     cfg.InvoiceDate,
+		TemplFDueDate:         cfg.DueDate,
+		TemplFASum:            amount.StringFixed(2),
+		TemplFTaxSum:          tax.StringFixed(2),
+		TemplFTotSum:          total.StringFixed(2),
 	}
 	for k, v := range *fields {
 		if err := replaceField(templateStr, k, v); err != nil {
@@ -203,6 +252,39 @@ func ApplyInvoice(templateStr *string, rowTemplate string, cfg *config.Invoice) 
 		}
 	}
 	return nil
+}
+
+func AppendItem(v *Item, rowTemplate string) (string, error) {
+	var itemsStr = ""
+	itemsStr += rowTemplate
+
+	// if any field is bigger than a row template then double the lines of a row template
+	// exclude MaxLen == 0 from that rule; row has no such field so we will ignore it anyway
+	for _, f := range v.Fields {
+		if f.MaxLen > 0 && utf8.RuneCountInString(f.Value) > f.MaxLen {
+			log.Printf("value %s is bigger than len %d", f.Value, f.MaxLen)
+			itemsStr += rowTemplate
+			break
+		}
+	}
+
+	// string representation of item to apply
+	for _, f := range v.Fields {
+		if err := replaceField(&itemsStr, f.Label, f.Value); err != nil {
+			return "", err
+		}
+	}
+
+	// go again to clear not replaced crap like double lines for expand title purpose
+	for _, f := range v.Fields {
+		if err := replaceField(&itemsStr, f.Label, ""); err != nil {
+			return "", err
+		}
+	}
+
+	log.Printf("append item: %s", itemsStr)
+
+	return itemsStr, nil
 }
 
 func ToHTML(invoice string) ([]byte, error) {
