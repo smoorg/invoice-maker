@@ -188,7 +188,28 @@ func (m InvoicesModel) Init() tea.Cmd {
 func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 	var cmd tea.Cmd
 	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
+	case pkg.JumpInvoicePrint:
+		m.view = ViewPrint
+		log.Println("Jump invoice print")
+	case pkg.JumpInvoicePreview:
+		m.view = ViewPreview
+	case pkg.JumpInvoices:
+		log.Println("JumpInvoiceList to the list event")
+		m.view = ViewList
+	case pkg.JumpInvoiceEdit:
+		log.Println("JumpInvoiceEdit to the edit event")
+		m.view = ViewEdit
+
+		picked := m.table.SelectedRow()
+		inv, _, err := getInvoice(m.invoices, picked[ColumnInvoiceNo], picked[ColumnNet])
+		if err != nil {
+			panic(err)
+		}
+		m.edit.SetInvoiceModel(inv)
+		m.edit, cmd = m.edit.Update(msg)
+		cmds = append(cmds, cmd)
 	case pkg.SetInvoiceRows:
 		rows := []table.Row{}
 		for _, v := range msg.Rows {
@@ -205,78 +226,12 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.table.SetWidth(msg.Width)
 		m.table.SetHeight(msg.Height)
-		m.flex.SetWidth(msg.Width)
-		m.flex.SetHeight(msg.Height)
-	case pkg.JumpInvoiceEdit:
-		m.view = ViewEdit
-
-		picked := m.table.SelectedRow()
-		inv, _, err := getInvoice(m.invoices, picked[ColumnInvoiceNo], picked[ColumnNet])
-		if err != nil {
-			panic(err)
-		}
-		m.edit.SetInvoiceModel(inv)
-
-	case pkg.JumpInvoicePreview:
-		m.view = ViewPreview
+		// m.flex.SetWidth(msg.Width)
+		// m.flex.SetHeight(msg.Height)
 	case tea.KeyMsg:
-		switch {
-		case key.Matches(msg, m.keys.Back):
-			switch m.view {
-			case ViewList:
-				cmds = append(cmds, pkg.GoMain())
-			case ViewPreview:
-				m.view = ViewList
-			case ViewPrint:
-				m.view = ViewList
-			}
-		case key.Matches(msg, m.keys.Down):
-			switch m.view {
-			case ViewList:
-				m.table.MoveDown(1)
-			}
-		case key.Matches(msg, m.keys.Up):
-			switch m.view {
-			case ViewList:
-				m.table.MoveUp(1)
-			}
-		case key.Matches(msg, m.keys.Next):
-			switch m.view {
-			case ViewList:
-				cmd = pkg.GoInvoicePreview()
-				cmds = append(cmds, cmd)
-			case ViewPreview:
-				cmd = pkg.GoInvoiceEdit()
-				cmds = append(cmds, cmd)
-			}
-		case key.Matches(msg, m.keys.Top):
-			m.table.MoveUp(m.table.Cursor())
-		case key.Matches(msg, m.keys.Bottom):
-			m.table.MoveDown(len(m.table.Rows()) - 1 - m.table.Cursor())
-		case key.Matches(msg, m.keys.Print):
-			switch m.view {
-			case ViewList:
-				m.view = ViewPrint
-
-				picked := m.table.SelectedRow()
-				invContent, err := getInvoiceContent(m.invoices, picked[ColumnInvoiceNo], picked[ColumnNet])
-				if err != nil {
-					panic(err)
-				}
-				m.printPath = m.printInvoice(invContent)
-
-				go func(file string) {
-					cmd := exec.Command("xdg-open", file)
-					_, err := cmd.Output()
-					if err != nil {
-						log.Fatal(err)
-					}
-				}(m.printPath)
-
-				return m, pkg.GoInvoicePreview()
-			}
-		case key.Matches(msg, m.keys.Edit):
-			m.view = ViewEdit
+		if m.view == ViewList {
+			m, cmd = m.UpdateList(msg)
+			cmds = append(cmds, cmd)
 		}
 	}
 
@@ -285,6 +240,7 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 		m.edit, cmd = m.edit.Update(msg)
 		cmds = append(cmds, cmd)
 	case ViewPreview:
+		log.Println("calling preview update")
 		m.invoice, cmd = m.invoice.Update(msg)
 		cmds = append(cmds, cmd)
 	case ViewList:
@@ -303,10 +259,76 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 			}
 		}
 	case ViewPrint:
+		m, cmd = m.Print()
+		cmds = append(cmds, cmd)
 	}
 
 	return m, tea.Batch(cmds...)
 }
+
+func (m InvoicesModel) UpdateList(msg tea.KeyMsg) (InvoicesModel, tea.Cmd) {
+	var cmd tea.Cmd
+	var cmds []tea.Cmd
+
+	switch {
+	case key.Matches(msg, m.keys.Back):
+		switch m.view {
+		case ViewList:
+			cmds = append(cmds, pkg.GoMain())
+		case ViewPrint:
+			m.view = ViewList
+		}
+	case key.Matches(msg, m.keys.Down):
+		switch m.view {
+		case ViewList:
+			m.table.MoveDown(1)
+		}
+	case key.Matches(msg, m.keys.Up):
+		switch m.view {
+		case ViewList:
+			m.table.MoveUp(1)
+		}
+	case key.Matches(msg, m.keys.Next):
+		switch m.view {
+		case ViewList:
+			cmd = pkg.GoInvoicePreview()
+			cmds = append(cmds, cmd)
+		}
+	case key.Matches(msg, m.keys.Top):
+		m.table.MoveUp(m.table.Cursor())
+	case key.Matches(msg, m.keys.Bottom):
+		m.table.MoveDown(len(m.table.Rows()) - 1 - m.table.Cursor())
+	case key.Matches(msg, m.keys.Print):
+		m, cmd = m.Print()
+		cmds = append(cmds, cmd)
+	case key.Matches(msg, m.keys.Edit):
+		m.view = ViewEdit
+	}
+
+	return m, tea.Batch(cmds...)
+}
+
+func (m InvoicesModel) Print() (InvoicesModel, tea.Cmd) {
+	m.view = ViewPrint
+
+	picked := m.table.SelectedRow()
+	invContent, err := getInvoiceContent(m.invoices, picked[ColumnInvoiceNo], picked[ColumnNet])
+	if err != nil {
+		panic(err)
+	}
+	m.printPath = m.printInvoice(invContent)
+
+	go func(file string) {
+		cmd := exec.Command("xdg-open", file)
+		_, err := cmd.Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}(m.printPath)
+
+	return m, pkg.GoInvoicePreview()
+}
+
 func (m InvoicesModel) View() string {
 	content := ""
 	switch m.view {

@@ -11,9 +11,9 @@ func MapToBindingsList(k any) []key.Binding {
 
 	values := make([]key.Binding, v.NumField())
 
-	for i := 0; i < v.NumField(); i++ {
-		if v.Field(i).Type().AssignableTo(reflect.TypeOf(key.Binding{})) {
-			if v, ok := v.Field(i).Interface().(key.Binding); ok {
+	for _, field := range v.Fields() {
+		if field.Type().AssignableTo(reflect.TypeFor[key.Binding]()) {
+			if v, ok := field.Interface().(key.Binding); ok {
 				values = append(values, v)
 			}
 		}
