@@ -27,6 +27,19 @@ func GoInvoiceEdit() tea.Cmd    { return func() tea.Msg { return JumpInvoiceEdit
 func GoInvoiceList() tea.Cmd    { return func() tea.Msg { return JumpInvoices{} } }
 func GoInvoicePrint() tea.Cmd   { return func() tea.Msg { return JumpInvoicePrint{} } }
 
+type EventUpdateReceiver struct {
+	Old config.Company
+	New config.Company
+}
+func UpdateReceiver(old config.Company, new config.Company) tea.Cmd {
+	return func() tea.Msg {
+		return EventUpdateReceiver{
+			Old: old,
+			New: new,
+		}
+	}
+}
+
 func GoReceivers() tea.Cmd { return func() tea.Msg { return JumpReceivers{} } }
 func GoReceiverEdit(v config.Company) tea.Cmd {
 	return func() tea.Msg { return JumpReceiverEdit{Receiver: v} }

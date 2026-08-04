@@ -4,6 +4,7 @@ import (
 	"invoice-maker/cmd/v2/controls/button"
 	labelinput "invoice-maker/cmd/v2/controls/label_input"
 	singleselect "invoice-maker/cmd/v2/controls/single_select"
+	"invoice-maker/cmd/v2/styles"
 	"invoice-maker/pkg"
 	"strings"
 	"time"
@@ -28,7 +29,7 @@ const (
 
 const FocusNumOfItems = 4
 
-type keymap struct {}
+type keymap struct{}
 
 type InvoiceEditModel struct {
 	focus      int
@@ -241,8 +242,6 @@ var thickBorderStyle = lipgloss.NewStyle().
 	Border(lipgloss.ThickBorder()).
 	Padding(1)
 
-var marginStyle = lipgloss.NewStyle().Padding(1)
-
 func (m InvoiceEditModel) View() string {
 	s := strings.Builder{}
 	formItems := []string{
@@ -266,5 +265,5 @@ func (m InvoiceEditModel) View() string {
 		}
 	}
 
-	return marginStyle.Render(s.String())
+	return styles.MarginStyle.Render(s.String())
 }

@@ -57,7 +57,7 @@ func (m *Model) Focus() tea.Cmd {
 	return m.input.Focus()
 }
 
-func (m Model) Init() {}
+func (m Model) Init() tea.Cmd { return nil }
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd

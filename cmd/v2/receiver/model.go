@@ -52,8 +52,8 @@ func New() ReceiversModel {
 
 	m.keyBindings = keyMap{
 		Back: key.NewBinding(
-			key.WithKeys("h"),
-			key.WithHelp("h", "go back"),
+			key.WithKeys("h", tea.KeyEsc.String()),
+			key.WithHelp("h/esc", "go back"),
 		),
 		Up: key.NewBinding(
 			key.WithKeys("k", tea.KeyUp.String()),
@@ -64,8 +64,8 @@ func New() ReceiversModel {
 			key.WithHelp("j", "down"),
 		),
 		Edit: key.NewBinding(
-			key.WithKeys("e"),
-			key.WithHelp("e", "edit"),
+			key.WithKeys("e", "l"),
+			key.WithHelp("e/l", "edit"),
 		),
 	}
 

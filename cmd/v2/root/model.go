@@ -34,8 +34,8 @@ type RootModel struct {
 	receiverEdit edit.ReceiverEdit
 	configModel  configview.ConfigModel
 
-	keys         keymap
-	helpContent  string
+	keys        keymap
+	helpContent string
 }
 
 // Beginning of the tui. Initializes main view.
@@ -155,13 +155,32 @@ func (m RootModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.view = view.ViewReceivers
 	case pkg.JumpReceiverEdit:
 		m.view = view.ViewReceiverEdit
-		m.receiverEdit.SetReceiver(msg.Receiver)
 	case InitEvent:
 	case tea.WindowSizeMsg:
 		m.viewList.SetSize(msg.Width, msg.Height-1)
-		m.invoiceModel.SetSize(msg.Width, msg.Height)
-		m.receivers.SetSize(msg.Width, msg.Height)
-		m.configModel.SetSize(msg.Width, msg.Height)
+
+		m.invoiceModel, cmd = m.invoiceModel.Update(msg)
+		cmds = append(cmds, cmd)
+
+		m.receivers, cmd = m.receivers.Update(msg)
+		cmds = append(cmds, cmd)
+
+		m.configModel, cmd = m.configModel.Update(msg)
+		cmds = append(cmds, cmd)
+
+		m.receiverEdit, cmd = m.receiverEdit.Update(msg)
+		cmds = append(cmds, cmd)
+	case pkg.EventUpdateReceiver:
+		// TODO: figure out a better hack for saving upper view's data
+		for i, v := range m.config.Receivers {
+			if v == msg.Old {
+				m.config.Receivers[i] = msg.New
+			}
+		}
+		err := m.config.WriteConfig()
+		if err != nil {
+			panic(err)
+		}
 	case tea.KeyMsg:
 		switch {
 		case key.Matches(msg, m.keys.Quit):

@@ -153,8 +153,8 @@ func New(config config.Config) InvoicesModel {
 			key.WithHelp("→/l", "preview"),
 		),
 		Back: key.NewBinding(
-			key.WithKeys("h", tea.KeyLeft.String()),
-			key.WithHelp("←/h", "go back"),
+			key.WithKeys("h", tea.KeyLeft.String(), tea.KeyEsc.String()),
+			key.WithHelp("←/h/esc", "go back"),
 		),
 		Print: key.NewBinding(
 			key.WithKeys("p"),

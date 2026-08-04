@@ -124,6 +124,11 @@ func (m ConfigModel) Update(msg tea.Msg) (ConfigModel, tea.Cmd) {
 			default:
 			}
 		case key.Matches(msg, m.keys.Esc):
+			if m.focusID == 0 {
+				cmd = pkg.GoMain()
+				cmds = append(cmds, cmd)
+				break
+			}
 			m.focusID = 0
 			m.FontFamily.Blur()
 			m.InvoiceDirectory.Blur()
