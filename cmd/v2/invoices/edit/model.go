@@ -76,11 +76,11 @@ func NewEditModel(opts ...Option) InvoiceEditModel {
 		o(&m)
 	}
 
-	m.InputInvoiceNo = labelinput.New("Invoice No.", 20)
+	m.InputInvoiceNo = labelinput.New(config.FieldInvoiceNo)
 	m.timeLayout = time.DateOnly
-	m.InputInvoiceDate = labelinput.New("Invoice Date", 20)
-	m.InputDeliveryDate = labelinput.New("DeliveryDate", 20)
-	m.InputDueDate = labelinput.New("Due Date", 20)
+	m.InputInvoiceDate = labelinput.New(config.FieldInvoiceDate)
+	m.InputDeliveryDate = labelinput.New(config.FieldDeliveryDate)
+	m.InputDueDate = labelinput.New(config.FieldDueDate)
 
 	cfg, err := config.GetConfig(nil)
 	if err != nil {

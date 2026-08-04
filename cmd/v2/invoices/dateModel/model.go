@@ -50,7 +50,7 @@ func (m DateInput) Validate(date string) error {
 func NewDateInput(label string, limit int, layout string) DateInput {
 	m := DateInput{
 		layout: layout,
-		input:  labelinput.New(label, limit),
+		input:  labelinput.New(label),
 	}
 
 	return m

@@ -31,9 +31,6 @@ type ConfigModel struct {
 	InvoiceDirectory labelinput.Model
 }
 
-func (m ConfigModel) SetSize(width int, height int) {
-}
-
 type keyMap struct {
 	NextField key.Binding
 	Esc       key.Binding
@@ -65,7 +62,7 @@ func New(cfg config.Config) ConfigModel {
 	fontFamily := singleselect.New("Font Family", 20, items)
 
 	// Invoice directory input
-	invoiceDir := labelinput.New("Invoice Directory", 20)
+	invoiceDir := labelinput.New("Invoice Directory")
 	invoiceDir.SetValue(cfg.Config.InvoiceDirectory)
 
 	keymap := keyMap{

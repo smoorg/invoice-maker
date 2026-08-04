@@ -26,24 +26,26 @@ func (m *Model) SetValue(date string) {
 }
 
 func (m *Model) Blur() {
-	m.input.Blur()
 	m.input.TextStyle = styles.GreyedOut
+	m.input.Blur()
 }
 
 func (m Model) Focused() bool {
 	return m.input.Focused()
 }
 
-func New(label string, limit int) Model {
+func New(label string) Model {
 	i := textinput.New()
 	i.Width = 80
 	i.TextStyle = styles.GreyedOut
-	i.PromptStyle =styles.GreyedOut
+	// i.PromptStyle = styles.GreyedOut
+	// i.Cursor.Style = styles.Cursor
+	// i.Cursor.TextStyle = styles.Cursor
 	i.Prompt = ""
 
 	return Model{
 		label:      label,
-		labelLimit: limit,
+		labelLimit: 20,
 		input:      i,
 		valid:      false,
 		errMsg:     nil,
