@@ -317,7 +317,12 @@ func (m InvoicesModel) Print() (InvoicesModel, tea.Cmd) {
 	if err != nil {
 		panic(err)
 	}
-	m.printPath = m.printInvoice(invContent)
+
+	path, err := m.printInvoice(invContent)
+	if err != nil {
+		panic(err)
+	}
+	m.printPath = path
 
 	go func(file string) {
 		cmd := exec.Command("xdg-open", file)
@@ -357,21 +362,21 @@ func (m InvoicesModel) View() string {
 	return content
 }
 
-func (m *InvoicesModel) printInvoice(invContent string) string {
+func (m *InvoicesModel) printInvoice(invContent string) (string, error) {
 	dir, err := config.GetInvoicePath(m.directory)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 	fonts, err := font.FindFonts(m.font.Family, m.font.Style)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	if len(fonts) == 0 {
-		errMsg := fmt.Sprint(
-			"font from the config could not be found in the system, font-family: ",
-			m.font.Family, "font-style: ", m.font.Style)
-		panic(errMsg)
+		err := fmt.Errorf(
+			"font from the config could not be found in the system, font-family: %s, font-style: %s",
+			m.font.Family, m.font.Style)
+		return "", err
 	}
 
 	htmlBytes, err := template.ToHTML(invContent)
@@ -382,10 +387,10 @@ func (m *InvoicesModel) printInvoice(invContent string) string {
 	pdfName := name + ".pdf"
 
 	if err := saveFile(dir, mdName, []byte(invContent)); err != nil {
-		panic("issue while writting markdown file: " + err.Error())
+		return "", fmt.Errorf("issue while writting markdown file: %s", err.Error())
 	}
 	if err := saveFile(dir, htmlName, htmlBytes); err != nil {
-		panic("issue while writting html file: " + err.Error())
+		return "", fmt.Errorf("issue while writting html file: %s", err.Error())
 	}
 
 	re := regexp.MustCompile(`<?.pre>`)
@@ -407,7 +412,7 @@ func (m *InvoicesModel) printInvoice(invContent string) string {
 
 	path := filepath.Join(dir, pdfName)
 	if err := pdf.Output(path); err != nil {
-		panic("pdf output: " + err.Error())
+		return "", fmt.Errorf("pdf output: %s", err.Error())
 	}
-	return path
+	return path, nil
 }
