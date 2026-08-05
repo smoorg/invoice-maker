@@ -17,7 +17,7 @@ import (
 	"invoice-maker/pkg/pdf"
 	"invoice-maker/pkg/template"
 
-	// "github.com/76creates/stickers/flexbox"
+	"github.com/76creates/stickers/flexbox"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
@@ -57,7 +57,7 @@ type InvoicesModel struct {
 
 	table table.Model
 	cols  *InvoiceListColumns
-	// flex  flexbox.HorizontalFlexBox
+	flex  flexbox.HorizontalFlexBox
 
 	helpContent  string
 	printContent string
@@ -77,8 +77,8 @@ func (m *InvoicesModel) SetRows(rows []table.Row) {
 }
 
 func (m *InvoicesModel) SetSize(width int, height int) {
-	// m.flex.SetWidth(width)
-	// m.flex.SetHeight(height)
+	m.flex.SetWidth(width)
+	m.flex.SetHeight(height)
 	m.table.SetWidth(width)
 	m.table.SetHeight(height)
 }
@@ -128,13 +128,14 @@ func New(config config.Config) InvoicesModel {
 	m.table.SetHeight(5)
 	m.table.SetWidth(100)
 
-	// m.flex = *flexbox.NewHorizontal(0, 0)
-	// columns := []*flexbox.Column{
-	// 	m.flex.NewColumn().AddCells(
-	// 		flexbox.NewCell(1, 1),
-	// 	),
-	// }
-	// m.flex.AddColumns(columns)
+	m.flex = *flexbox.NewHorizontal(0, 0)
+	columns := []*flexbox.Column{
+		m.flex.NewColumn().AddCells(
+			flexbox.NewCell(1, 1),
+		),
+	}
+	m.flex.AddColumns(columns)
+
 	m.directory = config.Config.InvoiceDirectory
 	m.font = config.Config
 	m.edit = edit.NewEditModel()
@@ -226,8 +227,8 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.table.SetWidth(msg.Width)
 		m.table.SetHeight(msg.Height)
-		// m.flex.SetWidth(msg.Width)
-		// m.flex.SetHeight(msg.Height)
+		m.flex.SetWidth(msg.Width)
+		m.flex.SetHeight(msg.Height)
 	case tea.KeyMsg:
 		if m.view == ViewList {
 			m, cmd = m.UpdateList(msg)
@@ -246,7 +247,7 @@ func (m InvoicesModel) Update(msg tea.Msg) (InvoicesModel, tea.Cmd) {
 	case ViewList:
 		m.table, cmd = m.table.Update(msg)
 		cmds = append(cmds, cmd)
-		// m.flex.GetColumn(0).GetCell(0).SetContent(m.table.View())
+		m.flex.GetColumn(0).GetCell(0).SetContent(m.table.View())
 
 		picked := m.table.SelectedRow()
 		if picked == nil {
@@ -339,15 +340,13 @@ func (m InvoicesModel) View() string {
 	case ViewPrint:
 		if m.printPath == "" {
 			return "Missing invoice print path..."
-
 		}
 		content = fmt.Sprintf("Your invoice got print at:\n%s", m.printPath)
-
-	case ViewList:
-		// availHeight := m.flex.GetHeight()
-		// availHeight -= lipgloss.Height(m.helpContent)
-		// m.flex.SetHeight(availHeight)
-		// content = m.flex.Render()
+	case ViewList: // this view
+		availHeight := m.flex.GetHeight()
+		availHeight -= lipgloss.Height(m.helpContent)
+		m.flex.SetHeight(availHeight)
+		content = m.flex.Render()
 		content = m.table.View()
 
 		var sections []string

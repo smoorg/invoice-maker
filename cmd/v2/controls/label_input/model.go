@@ -13,8 +13,8 @@ type Model struct {
 	labelLimit int
 	input      textinput.Model
 
-	valid   bool
-	errMsg  error
+	valid  bool
+	errMsg error
 }
 
 func (m Model) Value() string {
